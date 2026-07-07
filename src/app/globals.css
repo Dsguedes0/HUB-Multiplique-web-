@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+:root {
+  --hub-black: #0b0b0c;
+  --hub-paper: #faf9f6;
+  --hub-line: #e7e5e0;
+  --hub-muted: #8a8a93;
+  --hub-muted-2: #6b6b73;
+  --hub-red: #e8432e;
+  --hub-red-dark: #b8301f;
+  --hub-red-light: #ff8362;
+  --hub-green: #2f9e5b;
+  --hub-amber: #dba53a;
+  --hub-danger: #d9534f;
+}
+
+@theme inline {
+  --font-sans: var(--font-manrope);
+  --font-display: var(--font-archivo-black);
+  --color-hub-black: var(--hub-black);
+  --color-hub-paper: var(--hub-paper);
+  --color-hub-line: var(--hub-line);
+  --color-hub-muted: var(--hub-muted);
+  --color-hub-muted-2: var(--hub-muted-2);
+  --color-hub-red: var(--hub-red);
+  --color-hub-red-dark: var(--hub-red-dark);
+  --color-hub-red-light: var(--hub-red-light);
+  --color-hub-green: var(--hub-green);
+  --color-hub-amber: var(--hub-amber);
+  --color-hub-danger: var(--hub-danger);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--hub-paper);
+  color: var(--hub-black);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: 0.01em;
+}
+
+.font-display {
+  font-family: var(--font-display), sans-serif;
+}
+
+input,
+textarea,
+select {
+  background: white;
+}
+
+@keyframes hub-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hub-soft-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(1.12);
+  }
+}
+
+.anim-in {
+  animation: hub-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.anim-pulse {
+  animation: hub-soft-pulse 2.4s ease-in-out infinite;
+}
