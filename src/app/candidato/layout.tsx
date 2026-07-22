@@ -4,6 +4,7 @@ import { DashboardShell } from "@/components/DashboardShell";
 
 const NAV = [
   { href: "/candidato/vagas", label: "Vagas disponíveis" },
+  { href: "/candidato/empresas", label: "Empresas" },
   { href: "/candidato/candidaturas", label: "Minhas candidaturas" },
   { href: "/candidato/perfil", label: "Meu perfil" },
 ];
