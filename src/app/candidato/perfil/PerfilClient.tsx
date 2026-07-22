@@ -121,7 +121,22 @@ export function PerfilClient({
     const fd = new FormData();
     fd.set("cv", file);
     startUpload(async () => {
-      const res = await uploadAndExtractCvAction(fd);
+      let res: Awaited<ReturnType<typeof uploadAndExtractCvAction>>;
+      try {
+        res = await uploadAndExtractCvAction(fd);
+      } catch {
+        // Sem este catch, uma falha aqui (ex.: a aba ficou aberta durante um
+        // deploy e o Server Action referenciado não existe mais nessa versão
+        // — "Failed to find Server Action") virava uma promise rejeitada
+        // silenciosa: nada de mensagem, nada de skills/experiências, só a
+        // tag estática de "currículo enviado" continuava visível, sem
+        // nenhum sinal de que o envio falhou. Um F5 na página resolve esse
+        // caso específico (recarrega o código mais recente).
+        setUploadMsg(
+          "Não foi possível processar o currículo. Atualize a página (F5) e tente enviar novamente."
+        );
+        return;
+      }
       if (res.cvUrl) setCvUrl(res.cvUrl);
       if (res.extraction) {
         let addedSkills = 0;
@@ -157,6 +172,10 @@ export function PerfilClient({
         );
       } else if (res.error) {
         setUploadMsg(res.error);
+      } else {
+        // Não deveria acontecer (a action sempre retorna extraction ou
+        // error), mas evita ficar sem nenhum feedback caso isso mude.
+        setUploadMsg("Currículo enviado, mas a IA não retornou nada. Tente novamente em instantes.");
       }
     });
   }
