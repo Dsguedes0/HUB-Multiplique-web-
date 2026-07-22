@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { Card, SectionTitle, Label, Input, Button, Tag } from "@/components/ui";
-import { saveProfileAction, uploadAndExtractCvAction } from "./actions";
+import { saveProfileAction, uploadAndExtractCvAction, deleteCvAction } from "./actions";
 import type { CandidateExperience, CandidateSkill } from "@/types/database";
 
 export function PerfilClient({
@@ -28,9 +28,26 @@ export function PerfilClient({
 
   const [saving, startSave] = useTransition();
   const [uploading, startUpload] = useTransition();
+  const [deletingCv, startDeleteCv] = useTransition();
   const [uploadMsg, setUploadMsg] = useState<string | null>(null);
   const [saveOk, setSaveOk] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  function handleDeleteCv() {
+    if (!confirm("Excluir o currículo enviado? As habilidades e experiências já preenchidas continuam no perfil.")) {
+      return;
+    }
+    setUploadMsg(null);
+    startDeleteCv(async () => {
+      const res = await deleteCvAction();
+      if (res.ok) {
+        setCvUrl(null);
+        setUploadMsg("Currículo excluído.");
+      } else if (res.error) {
+        setUploadMsg(res.error);
+      }
+    });
+  }
 
   function updateSkill(i: number, patch: Partial<CandidateSkill>) {
     setSkills((prev) => prev.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
@@ -145,7 +162,18 @@ export function PerfilClient({
 
         <SectionTitle>Currículo</SectionTitle>
         {cvUrl ? (
-          <Tag tone="brand">📄 curriculo.pdf enviado — IA já pôde extrair skills e experiências</Tag>
+          <div className="flex items-center gap-2">
+            <Tag tone="brand">📄 curriculo.pdf enviado — IA já pôde extrair skills e experiências</Tag>
+            <button
+              type="button"
+              onClick={handleDeleteCv}
+              disabled={deletingCv}
+              aria-label="Excluir currículo"
+              className="text-hub-muted hover:text-hub-red disabled:opacity-50"
+            >
+              ×
+            </button>
+          </div>
         ) : (
           <span className="text-xs text-hub-muted">Nenhum currículo enviado ainda.</span>
         )}

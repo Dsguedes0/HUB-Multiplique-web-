@@ -111,3 +111,35 @@ export async function uploadAndExtractCvAction(formData: FormData): Promise<CvUp
     };
   }
 }
+
+export interface CvDeleteResult {
+  error?: string;
+  ok?: boolean;
+}
+
+export async function deleteCvAction(): Promise<CvDeleteResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Não autenticado." };
+
+  const path = `${user.id}/curriculo.pdf`;
+
+  const { error: removeError } = await supabase.storage.from("cvs").remove([path]);
+  // Ignora "objeto não existe" (o candidato pode ter apagado o arquivo do
+  // storage sem passar por essa action) — o que importa é limpar cv_url no
+  // perfil de qualquer forma.
+  if (removeError && !/not.*found/i.test(removeError.message)) {
+    return { error: removeError.message };
+  }
+
+  const { error: updateError } = await supabase
+    .from("candidate_profiles")
+    .update({ cv_url: null, cv_parsed_at: null })
+    .eq("id", user.id);
+  if (updateError) return { error: updateError.message };
+
+  revalidatePath("/candidato/perfil");
+  return { ok: true };
+}
