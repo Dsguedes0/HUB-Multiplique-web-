@@ -5,6 +5,30 @@ import { Card, SectionTitle, Label, Input, Button, Tag } from "@/components/ui";
 import { saveProfileAction, uploadAndExtractCvAction, deleteCvAction } from "./actions";
 import type { CandidateExperience, CandidateSkill } from "@/types/database";
 
+// Precisa espelhar os limites de src/lib/validation/profile.ts — o servidor
+// rejeita (e o handleSave abaixo mostra o erro) qualquer payload fora
+// desses limites, então truncamos aqui antes mesmo de chegar lá.
+const MAX_ITEMS = 30;
+const SKILL_NAME_MAX = 60;
+const EXP_TEXT_MAX = 120;
+const EXP_DESCRIPTION_MAX = 500;
+
+function sanitizeSkill(s: CandidateSkill): CandidateSkill {
+  return {
+    name: s.name.slice(0, SKILL_NAME_MAX),
+    level: Math.max(0, Math.min(100, Math.round(s.level))),
+  };
+}
+
+function sanitizeExperience(e: CandidateExperience): CandidateExperience {
+  return {
+    title: e.title.slice(0, EXP_TEXT_MAX),
+    company: e.company.slice(0, EXP_TEXT_MAX),
+    months: Math.max(0, Math.min(600, Math.round(e.months))),
+    description: e.description ? e.description.slice(0, EXP_DESCRIPTION_MAX) : e.description,
+  };
+}
+
 export function PerfilClient({
   initial,
 }: {
@@ -31,6 +55,7 @@ export function PerfilClient({
   const [deletingCv, startDeleteCv] = useTransition();
   const [uploadMsg, setUploadMsg] = useState<string | null>(null);
   const [saveOk, setSaveOk] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
   function handleDeleteCv() {
@@ -66,10 +91,16 @@ export function PerfilClient({
   // assim nada que o candidato preencheu manualmente se perde. Dedup por
   // nome (skills) ou cargo+empresa (experiências), ignorando maiúsculas e
   // espaços nas pontas, para não duplicar quando o mesmo CV é reenviado.
+  // Também sanitiza (trunca nomes/descrições) e limita a MAX_ITEMS — sem
+  // isso, um currículo extenso gera uma lista maior que o schema do
+  // servidor aceita e o "Salvar perfil" falha com um erro genérico (visto
+  // em produção: "Array must contain at most 30 element(s)").
   function mergeSkills(existing: CandidateSkill[], incoming: CandidateSkill[]): CandidateSkill[] {
     const existingKeys = new Set(existing.map((s) => s.name.trim().toLowerCase()));
-    const newOnes = incoming.filter((s) => !existingKeys.has(s.name.trim().toLowerCase()));
-    return [...existing, ...newOnes];
+    const newOnes = incoming
+      .filter((s) => !existingKeys.has(s.name.trim().toLowerCase()))
+      .map(sanitizeSkill);
+    return [...existing, ...newOnes].slice(0, MAX_ITEMS);
   }
 
   function mergeExperiences(
@@ -79,10 +110,10 @@ export function PerfilClient({
     const existingKeys = new Set(
       existing.map((e) => `${e.title.trim().toLowerCase()}|${e.company.trim().toLowerCase()}`)
     );
-    const newOnes = incoming.filter(
-      (e) => !existingKeys.has(`${e.title.trim().toLowerCase()}|${e.company.trim().toLowerCase()}`)
-    );
-    return [...existing, ...newOnes];
+    const newOnes = incoming
+      .filter((e) => !existingKeys.has(`${e.title.trim().toLowerCase()}|${e.company.trim().toLowerCase()}`))
+      .map(sanitizeExperience);
+    return [...existing, ...newOnes].slice(0, MAX_ITEMS);
   }
 
   function handleUpload(file: File) {
@@ -95,10 +126,13 @@ export function PerfilClient({
       if (res.extraction) {
         let addedSkills = 0;
         let addedExperiences = 0;
+        let skillsTruncated = false;
+        let experiencesTruncated = false;
         if (res.extraction.skills?.length) {
           setSkills((prev) => {
             const merged = mergeSkills(prev, res.extraction!.skills);
             addedSkills = merged.length - prev.length;
+            skillsTruncated = merged.length >= MAX_ITEMS;
             return merged;
           });
         }
@@ -106,6 +140,7 @@ export function PerfilClient({
           setExperiences((prev) => {
             const merged = mergeExperiences(prev, res.extraction!.experiences);
             addedExperiences = merged.length - prev.length;
+            experiencesTruncated = merged.length >= MAX_ITEMS;
             return merged;
           });
         }
@@ -113,8 +148,12 @@ export function PerfilClient({
         // lista), então só preenchemos se o candidato ainda não tinha escrito nada.
         if (res.extraction.education && !education) setEducation(res.extraction.education);
         if (res.extraction.availability && !availability) setAvailability(res.extraction.availability);
+        const truncationNote =
+          skillsTruncated || experiencesTruncated
+            ? ` (limite de ${MAX_ITEMS} itens por lista atingido — remova alguns antes de salvar se o CV tinha mais.)`
+            : "";
         setUploadMsg(
-          `IA extraiu do currículo: ${addedSkills} habilidade(s) e ${addedExperiences} experiência(s) novas, adicionadas junto com o que você já tinha. Revise abaixo e clique em Salvar perfil.`
+          `IA extraiu do currículo: ${addedSkills} habilidade(s) e ${addedExperiences} experiência(s) novas, adicionadas junto com o que você já tinha. Revise abaixo e clique em Salvar perfil.${truncationNote}`
         );
       } else if (res.error) {
         setUploadMsg(res.error);
@@ -124,16 +163,29 @@ export function PerfilClient({
 
   function handleSave() {
     setSaveOk(false);
+    setSaveError(null);
     startSave(async () => {
-      await saveProfileAction({
-        fullName,
-        availability,
-        salaryExpectation,
-        education,
-        skills,
-        experiences,
-      });
-      setSaveOk(true);
+      try {
+        await saveProfileAction({
+          fullName,
+          availability,
+          salaryExpectation,
+          education,
+          skills,
+          experiences,
+        });
+        setSaveOk(true);
+      } catch (err) {
+        // saveProfileAction lança um Error com uma mensagem amigável quando a
+        // validação (zod) falha — ex.: mais de 30 habilidades/experiências ou
+        // uma descrição com mais de 500 caracteres, comum quando a IA extrai
+        // muita coisa do currículo. Sem este catch, o erro não tratado
+        // derrubava a página inteira em produção ("Não foi possível carregar
+        // esta página" / Server Components render error).
+        setSaveError(
+          err instanceof Error ? err.message : "Não foi possível salvar o perfil. Tente novamente."
+        );
+      }
     });
   }
 
@@ -292,6 +344,9 @@ export function PerfilClient({
           {saving ? "Salvando…" : "Salvar perfil"}
         </Button>
         {saveOk && <div className="mt-2 text-center text-[12px] font-bold text-hub-green">Perfil salvo!</div>}
+        {saveError && (
+          <div className="mt-2 text-center text-[12px] font-semibold text-hub-red">{saveError}</div>
+        )}
       </Card>
     </div>
   );
