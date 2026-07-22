@@ -336,8 +336,10 @@ export function PerfilClient({
                 setExperiences((prev) => prev.map((x, idx) => (idx === i ? { ...x, company: e.target.value } : x)))
               }
             />
+            <Label>Duração (em meses)</Label>
             <Input
               type="number"
+              min={0}
               value={exp.months}
               placeholder="Meses de duração"
               onChange={(e) =>
