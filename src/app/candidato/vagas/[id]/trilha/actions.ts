@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { computeMatch } from "@/lib/match/score";
 import { aiProvider } from "@/lib/ai/provider";
+import { checkAiCooldown } from "@/lib/ai/rate-limit";
 import type { JobRequirement } from "@/types/database";
 
 export async function getOrCreateApplication(jobId: string) {
@@ -72,19 +73,34 @@ export async function generateTrackAction(
   try {
     const supabase = await createClient();
 
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { error: "Não autenticado." };
+
+    // Guarda de frequência para proteger a cota diária compartilhada do
+    // Gemini (ver auditoria de código, item #6) — olha a última geração de
+    // trilha desta candidatura específica.
+    const { data: lastTrack } = await supabase
+      .from("development_tracks")
+      .select("generated_at")
+      .eq("application_id", applicationId)
+      .order("generated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const cooldownError = checkAiCooldown(lastTrack?.generated_at);
+    if (cooldownError) return { error: cooldownError };
+
     const { data: job } = await supabase
       .from("jobs")
       .select("title, requirements")
       .eq("id", jobId)
       .single();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
     const { data: profile } = await supabase
       .from("candidate_profiles")
       .select("skills")
-      .eq("id", user!.id)
+      .eq("id", user.id)
       .single();
 
     const { data: application } = await supabase

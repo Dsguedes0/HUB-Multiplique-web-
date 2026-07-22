@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { passwordError } from "@/lib/auth/password-policy";
 
 export interface ResetPasswordState {
   error?: string;
@@ -14,9 +15,8 @@ export async function updatePasswordAction(
   const password = String(formData.get("password") || "");
   const confirmPassword = String(formData.get("confirmPassword") || "");
 
-  if (password.length < 8) {
-    return { error: "A senha precisa ter no mínimo 8 caracteres." };
-  }
+  const pwError = passwordError(password);
+  if (pwError) return { error: pwError };
   if (password !== confirmPassword) {
     return { error: "As senhas não coincidem." };
   }

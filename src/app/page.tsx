@@ -2,12 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Logo, LogoMark } from "@/components/Logo";
-
-const ROLE_HOME: Record<string, string> = {
-  admin: "/admin/empresas",
-  empresa: "/empresa/vagas",
-  candidato: "/candidato/vagas",
-};
+import { roleHome } from "@/lib/roles";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -22,7 +17,7 @@ export default async function Home() {
       .eq("id", user.id)
       .single();
 
-    redirect(ROLE_HOME[profile?.role ?? "candidato"]);
+    redirect(roleHome(profile?.role));
   }
 
   const [{ count: vagasCount }, { count: empresasCount }] = await Promise.all([

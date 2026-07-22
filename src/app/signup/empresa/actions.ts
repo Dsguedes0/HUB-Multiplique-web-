@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { passwordError } from "@/lib/auth/password-policy";
 import type { SignupState } from "../candidato/actions";
 
 export async function signUpEmpresaAction(
@@ -18,9 +19,8 @@ export async function signUpEmpresaAction(
   if (!responsavel || !email || !password || !nome) {
     return { error: "Preencha ao menos nome do responsável, e-mail, senha e nome da empresa." };
   }
-  if (password.length < 6) {
-    return { error: "A senha precisa ter pelo menos 6 caracteres." };
-  }
+  const pwError = passwordError(password);
+  if (pwError) return { error: pwError };
 
   const supabase = await createClient();
 
@@ -42,7 +42,19 @@ export async function signUpEmpresaAction(
     status: "pendente",
   });
 
-  if (companyError) return { error: companyError.message };
+  if (companyError) {
+    // 23505 = unique_violation. Com a constraint companies_owner_id_key
+    // (migration 0003), isso indica que já existe uma empresa para esse
+    // usuário — normalmente por um reenvio do formulário após uma falha
+    // parcial anterior (auth.signUp já tinha criado a conta).
+    if (companyError.code === "23505") {
+      return {
+        error:
+          "Já existe uma empresa cadastrada para esse e-mail. Tente fazer login em vez de cadastrar de novo.",
+      };
+    }
+    return { error: companyError.message };
+  }
 
   if (!data.session) {
     return { needsEmailConfirm: true, done: true };

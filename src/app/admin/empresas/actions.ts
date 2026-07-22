@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { requireRole } from "@/lib/supabase/require-user";
 
 export async function approveCompanyAction(companyId: string) {
-  const supabase = await createClient();
+  // Checagem explícita de papel além da política de RLS — defesa em
+  // profundidade (ver auditoria de código, item #7).
+  const { supabase } = await requireRole("admin");
   const { error } = await supabase
     .from("companies")
     .update({ status: "ativa" })

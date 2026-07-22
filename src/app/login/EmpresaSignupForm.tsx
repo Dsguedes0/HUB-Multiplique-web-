@@ -6,6 +6,7 @@ import { signUpEmpresaAction } from "../signup/empresa/actions";
 import type { SignupState } from "../signup/candidato/actions";
 import { Button, Input, Label } from "@/components/ui";
 import { PasswordInput } from "@/components/PasswordInput";
+import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password-policy";
 
 const initialState: SignupState = {};
 
@@ -46,7 +47,7 @@ export function EmpresaSignupForm() {
       <Label htmlFor="empresaEmail">E-mail</Label>
       <Input id="empresaEmail" name="email" type="email" required placeholder="voce@empresa.com" />
       <Label htmlFor="empresaPassword">Senha</Label>
-      <PasswordInput id="empresaPassword" name="password" required minLength={6} />
+      <PasswordInput id="empresaPassword" name="password" required minLength={MIN_PASSWORD_LENGTH} />
 
       {state.error && (
         <div className="mb-3 text-[12.5px] font-semibold text-hub-danger">{state.error}</div>

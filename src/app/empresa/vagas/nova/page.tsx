@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { createJobAction, type JobFormState } from "../actions";
 import { Card, Label, Input, Textarea, Button } from "@/components/ui";
 import { PageHeader } from "@/components/DashboardShell";
+import { RequirementsEditor } from "./RequirementsEditor";
 
 export default function NovaVagaPage() {
   const [state, formAction, pending] = useActionState<JobFormState, FormData>(
@@ -46,8 +47,7 @@ export default function NovaVagaPage() {
             <option value="temporario">Temporário</option>
           </select>
 
-          <Label htmlFor="requirements">Requisitos (separados por vírgula)</Label>
-          <Input id="requirements" name="requirements" placeholder="ex: Node.js, SQL, Git" />
+          <RequirementsEditor />
 
           <Label htmlFor="description">Descrição</Label>
           <Textarea id="description" name="description" rows={4} placeholder="Descreva a vaga..." />

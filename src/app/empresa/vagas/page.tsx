@@ -1,18 +1,15 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/supabase/require-user";
 import { PageHeader } from "@/components/DashboardShell";
 import { Button, EmptyNote, Tag } from "@/components/ui";
 
 export default async function VagasEmpresaPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await requireUser();
 
   const { data: company } = await supabase
     .from("companies")
     .select("id, name")
-    .eq("owner_id", user!.id)
+    .eq("owner_id", user.id)
     .single();
 
   const { data: jobs } = await supabase

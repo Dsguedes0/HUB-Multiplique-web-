@@ -2,22 +2,34 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/DashboardShell";
 import { EmptyNote } from "@/components/ui";
+import { Pagination } from "@/components/Pagination";
+import { initialColor } from "@/lib/ui/avatar-color";
 
-function initialColor(name: string) {
-  const colors = ["#e8432e", "#2f9e5b", "#3d6fb4", "#b4573d", "#7a5cc9"];
-  let h = 0;
-  for (const c of name) h += c.charCodeAt(0);
-  return colors[h % colors.length];
-}
+const PAGE_SIZE = 20;
 
-export default async function VagasCandidatoPage() {
+export default async function VagasCandidatoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
   const supabase = await createClient();
 
-  const { data: jobs } = await supabase
+  // Paginação no banco (.range()) em vez de carregar todas as vagas
+  // abertas de uma vez — evita que o payload e a query cresçam sem limite
+  // conforme mais empresas publicam vagas (ver auditoria de código, item #11).
+  const { data: jobs, count } = await supabase
     .from("jobs")
-    .select("id, title, modality, seniority, status, companies(name, city)")
+    .select("id, title, modality, seniority, status, companies(name, city)", { count: "exact" })
     .eq("status", "aberta")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 
   return (
     <div>
@@ -70,6 +82,8 @@ export default async function VagasCandidatoPage() {
           })}
         </div>
       )}
+
+      <Pagination basePath="/candidato/vagas" params={{}} page={page} totalPages={totalPages} />
     </div>
   );
 }

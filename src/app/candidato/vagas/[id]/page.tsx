@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/supabase/require-user";
 import { computeMatch } from "@/lib/match/score";
 import { PageHeader } from "@/components/DashboardShell";
 import { Card, SectionTitle, Tag, Button } from "@/components/ui";
@@ -14,10 +14,7 @@ export default async function VagaDetalhePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await requireUser();
 
   const { data: job } = await supabase
     .from("jobs")
@@ -32,14 +29,14 @@ export default async function VagaDetalhePage({
   const { data: profile } = await supabase
     .from("candidate_profiles")
     .select("skills, experiences, education, availability")
-    .eq("id", user!.id)
+    .eq("id", user.id)
     .single();
 
   const { data: existingApplication } = await supabase
     .from("applications")
     .select("id, match_score, match_breakdown")
     .eq("job_id", id)
-    .eq("candidate_id", user!.id)
+    .eq("candidate_id", user.id)
     .maybeSingle();
 
   const match =

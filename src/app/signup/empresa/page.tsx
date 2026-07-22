@@ -8,6 +8,7 @@ import type { SignupState } from "../candidato/actions";
 import { Logo } from "@/components/Logo";
 import { Button, Input, Label } from "@/components/ui";
 import { PasswordInput } from "@/components/PasswordInput";
+import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password-policy";
 
 const initialState: SignupState = {};
 
@@ -64,7 +65,7 @@ export default function SignupEmpresaPage() {
               <Label htmlFor="email">E-mail</Label>
               <Input id="email" name="email" type="email" required placeholder="voce@empresa.com" />
               <Label htmlFor="password">Senha</Label>
-              <PasswordInput id="password" name="password" required minLength={6} />
+              <PasswordInput id="password" name="password" required minLength={MIN_PASSWORD_LENGTH} />
 
               {state.error && (
                 <div className="mb-3 text-[12.5px] font-semibold text-hub-danger">{state.error}</div>

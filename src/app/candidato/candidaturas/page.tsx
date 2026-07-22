@@ -2,22 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/DashboardShell";
 import { Card, EmptyNote, Tag } from "@/components/ui";
-
-const STATUS_LABEL: Record<string, string> = {
-  candidatou: "Em análise",
-  visualizado: "Visualizado pela empresa",
-  entrevista: "Entrevista",
-  rejeitado: "Não seguiu",
-  contratado: "Contratado(a)",
-};
-
-const STATUS_TONE: Record<string, "amber" | "green" | "red" | "neutral"> = {
-  candidatou: "amber",
-  visualizado: "amber",
-  entrevista: "green",
-  rejeitado: "red",
-  contratado: "green",
-};
+import { APPLICATION_STATUS_LABEL, APPLICATION_STATUS_TONE } from "@/lib/status-labels";
+import type { ApplicationStatus } from "@/types/database";
 
 export default async function CandidaturasPage() {
   const supabase = await createClient();
@@ -64,8 +50,8 @@ export default async function CandidaturasPage() {
                     </td>
                     <td className="px-2.5 py-2.5">{company?.name}</td>
                     <td className="px-2.5 py-2.5">
-                      <Tag tone={STATUS_TONE[a.status] ?? "neutral"}>
-                        {STATUS_LABEL[a.status] ?? a.status}
+                      <Tag tone={APPLICATION_STATUS_TONE[a.status as ApplicationStatus] ?? "neutral"}>
+                        {APPLICATION_STATUS_LABEL[a.status as ApplicationStatus] ?? a.status}
                       </Tag>
                     </td>
                     <td className="px-2.5 py-2.5">{a.match_score}%</td>

@@ -1,13 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/DashboardShell";
 import { BarList, Card, EmptyNote, SectionTitle } from "@/components/ui";
-
-function initialColor(name: string) {
-  const colors = ["#e8432e", "#2f9e5b", "#3d6fb4", "#b4573d", "#7a5cc9"];
-  let h = 0;
-  for (const c of name) h += c.charCodeAt(0);
-  return colors[h % colors.length];
-}
+import { initialColor } from "@/lib/ui/avatar-color";
 
 export default async function AdminMetricasPage() {
   const supabase = await createClient();

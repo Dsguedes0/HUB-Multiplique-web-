@@ -2,18 +2,16 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/DashboardShell";
 import { EmptyNote, Tag } from "@/components/ui";
 import { EmpresasFilterBar } from "@/components/EmpresasFilterBar";
+import { Pagination } from "@/components/Pagination";
+import { initialColor } from "@/lib/ui/avatar-color";
 
-function initialColor(name: string) {
-  const colors = ["#e8432e", "#2f9e5b", "#3d6fb4", "#b4573d", "#7a5cc9"];
-  let h = 0;
-  for (const c of name) h += c.charCodeAt(0);
-  return colors[h % colors.length];
-}
+const PAGE_SIZE = 20;
 
 export interface EmpresasSearchParams {
   q?: string;
   setor?: string;
   destaque?: string;
+  page?: string;
 }
 
 export async function EmpresasBrowser({
@@ -27,6 +25,7 @@ export async function EmpresasBrowser({
   const q = (searchParams.q ?? "").trim();
   const setor = searchParams.setor ?? "";
   const destaque = searchParams.destaque === "1";
+  const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
 
   let query = supabase
     .from("companies")
@@ -66,6 +65,16 @@ export async function EmpresasBrowser({
     list.sort((a, b) => b.openJobs - a.openJobs || a.name.localeCompare(b.name, "pt-BR"));
   }
 
+  // Paginação em memória sobre o resultado já filtrado/ordenado: mais
+  // simples e sem risco de "populares"/destaque ficarem incorretos entre
+  // páginas, ao custo de ainda buscar todas as empresas que batem com o
+  // filtro atual do banco a cada request. Uma paginação 100% no banco para
+  // o modo "destaque" exigiria ordenar por uma contagem agregada de vagas
+  // (uma view ou RPC no Postgres), o que fica como próximo passo se a base
+  // de empresas crescer muito (ver auditoria de código, item #11).
+  const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  const pageItems = list.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
     <div>
       <PageHeader
@@ -79,7 +88,7 @@ export async function EmpresasBrowser({
         <EmptyNote>Nenhuma empresa encontrada com esse filtro.</EmptyNote>
       ) : (
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-          {list.map((c) => {
+          {pageItems.map((c) => {
             const isPopular = popularIds.has(c.id);
             const card = (
               <div className="flex h-full flex-col gap-3 rounded-xl border border-hub-line bg-white p-4 transition-all duration-[240ms] ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-0.5 hover:border-hub-red hover:shadow-[0_16px_36px_rgba(0,0,0,.12)] sm:p-4.5">
@@ -122,6 +131,13 @@ export async function EmpresasBrowser({
           })}
         </div>
       )}
+
+      <Pagination
+        basePath={basePath}
+        params={{ q, setor, destaque: destaque ? "1" : undefined }}
+        page={page}
+        totalPages={totalPages}
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { signUpCandidatoAction, type SignupState } from "../signup/candidato/actions";
 import { Button, Input, Label } from "@/components/ui";
 import { PasswordInput } from "@/components/PasswordInput";
+import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password-policy";
 
 const initialState: SignupState = {};
 
@@ -31,7 +32,7 @@ export function CandidatoSignupForm() {
       <Label htmlFor="signupEmail">E-mail</Label>
       <Input id="signupEmail" name="email" type="email" required placeholder="voce@email.com" />
       <Label htmlFor="signupPassword">Senha</Label>
-      <PasswordInput id="signupPassword" name="password" required minLength={6} />
+      <PasswordInput id="signupPassword" name="password" required minLength={MIN_PASSWORD_LENGTH} />
       <Label htmlFor="inviteCode">Código de convite</Label>
       <Input id="inviteCode" name="inviteCode" required placeholder="ex: HUB-4F9K2X" />
 

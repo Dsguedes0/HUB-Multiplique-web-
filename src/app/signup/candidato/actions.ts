@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { passwordError } from "@/lib/auth/password-policy";
 
 export interface SignupState {
   error?: string;
@@ -21,18 +22,21 @@ export async function signUpCandidatoAction(
   if (!fullName || !email || !password || !inviteCode) {
     return { error: "Preencha todos os campos." };
   }
-  if (password.length < 6) {
-    return { error: "A senha precisa ter pelo menos 6 caracteres." };
-  }
+  const pwError = passwordError(password);
+  if (pwError) return { error: pwError };
 
   const supabase = await createClient();
 
-  const { data: redeemed, error: redeemError } = await supabase.rpc(
-    "redeem_invite_code",
+  // Só verifica a validade do convite aqui (sem consumir um uso). O convite
+  // só é efetivamente gasto depois que o cadastro tiver sucesso — antes,
+  // qualquer falha no signUp (e-mail duplicado, instabilidade da Auth, etc.)
+  // já queimava um uso do convite sem nenhuma conta ter sido criada.
+  const { data: valid, error: checkError } = await supabase.rpc(
+    "check_invite_code",
     { p_code: inviteCode }
   );
 
-  if (redeemError || !redeemed) {
+  if (checkError || !valid) {
     return { error: "Código de convite inválido, expirado ou já usado no limite." };
   }
 
@@ -44,6 +48,23 @@ export async function signUpCandidatoAction(
 
   if (error) {
     return { error: error.message };
+  }
+
+  const { data: redeemed, error: redeemError } = await supabase.rpc(
+    "redeem_invite_code",
+    { p_code: inviteCode }
+  );
+
+  if (redeemError || !redeemed) {
+    // Caso raro de corrida entre a checagem e o consumo (ex.: dois
+    // cadastros simultâneos com o último uso disponível do mesmo código).
+    // A conta já foi criada nesse ponto — não há como desfazer o signUp
+    // aqui, então sinalizamos e deixamos seguir; vale registrar/alertar
+    // esse caso em produção.
+    return {
+      error:
+        "Conta criada, mas o código de convite não pôde ser confirmado (pode ter sido usado por outra pessoa ao mesmo tempo). Entre em contato com o Hub Multiplique.",
+    };
   }
 
   if (!data.session) {

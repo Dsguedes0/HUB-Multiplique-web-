@@ -1,11 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-
-const ROLE_HOME: Record<string, string> = {
-  admin: "/admin/empresas",
-  empresa: "/empresa/vagas",
-  candidato: "/candidato/vagas",
-};
+import { roleHome } from "@/lib/roles";
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -54,11 +49,14 @@ export async function updateSession(request: NextRequest) {
       .single();
 
     const role = profile?.role ?? "candidato";
-    const areaOk = path.startsWith(`/${role}`);
+    // Comparação por segmento de rota (não só por prefixo de string) —
+    // path.startsWith(`/${role}`) trataria incorretamente uma futura rota
+    // como "/empresarial" como pertencente ao papel "empresa".
+    const areaOk = path === `/${role}` || path.startsWith(`/${role}/`);
 
     if (!areaOk) {
       const url = request.nextUrl.clone();
-      url.pathname = ROLE_HOME[role] ?? "/login";
+      url.pathname = roleHome(role);
       return NextResponse.redirect(url);
     }
   }

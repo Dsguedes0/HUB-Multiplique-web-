@@ -1,12 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-
-const ROLE_HOME: Record<string, string> = {
-  admin: "/admin/empresas",
-  empresa: "/empresa/vagas",
-  candidato: "/candidato/vagas",
-};
+import { roleHome } from "@/lib/roles";
 
 export interface LoginState {
   error?: string;
@@ -37,5 +32,5 @@ export async function signInAction(
     .eq("id", data.user.id)
     .single();
 
-  return { redirectTo: ROLE_HOME[profile?.role ?? "candidato"] };
+  return { redirectTo: roleHome(profile?.role) };
 }
