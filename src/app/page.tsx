@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Logo, LogoMark } from "@/components/Logo";
 import { roleHome } from "@/lib/roles";
+import { Reveal } from "@/components/Reveal";
+import { AnimatedCounter } from "@/components/AnimatedCounter";
+import { ScrollProgress } from "@/components/ScrollProgress";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -49,6 +52,8 @@ const PASSOS = [
 function LandingPage({ vagasCount, empresasCount }: { vagasCount: number; empresasCount: number }) {
   return (
     <div className="min-h-screen bg-hub-paper">
+      <ScrollProgress />
+
       {/* Header */}
       <header className="sticky top-0 z-40 flex items-center justify-between border-b border-white/[.06] bg-hub-black/90 px-4 py-3 backdrop-blur-md sm:px-7 sm:py-3.5">
         <Logo variant="dark-bg" size={32} showSub={false} />
@@ -65,6 +70,7 @@ function LandingPage({ vagasCount, empresasCount }: { vagasCount: number; empres
         className="relative overflow-hidden px-5 py-16 text-white sm:px-7 md:px-16 md:py-24"
         style={{ background: "radial-gradient(circle at 15% 15%, #232327, var(--hub-black) 62%)" }}
       >
+        <div className="hub-dot-grid pointer-events-none absolute inset-0 opacity-[.12]" />
         <div
           className="pointer-events-none absolute -right-40 -top-40 h-[480px] w-[480px] rounded-full"
           style={{ background: "radial-gradient(circle, rgba(232,67,46,.18), transparent 70%)" }}
@@ -96,47 +102,57 @@ function LandingPage({ vagasCount, empresasCount }: { vagasCount: number; empres
 
       {/* Faixa de estatísticas */}
       <section className="border-b border-hub-line bg-white px-5 py-6 sm:px-7 md:px-16">
-        <div className="mx-auto flex max-w-[900px] flex-wrap items-center justify-center gap-x-8 gap-y-4 text-center sm:gap-x-14">
+        <Reveal className="mx-auto flex max-w-[900px] flex-wrap items-center justify-center gap-x-8 gap-y-4 text-center sm:gap-x-14">
           <div>
-            <div className="text-[26px] font-extrabold">{vagasCount}</div>
+            <div className="text-[26px] font-extrabold">
+              <AnimatedCounter value={vagasCount} />
+            </div>
             <div className="text-[12px] font-semibold uppercase tracking-wide text-hub-muted-2">Vagas abertas agora</div>
           </div>
           <div>
-            <div className="text-[26px] font-extrabold">{empresasCount}</div>
+            <div className="text-[26px] font-extrabold">
+              <AnimatedCounter value={empresasCount} />
+            </div>
             <div className="text-[12px] font-semibold uppercase tracking-wide text-hub-muted-2">Empresas parceiras</div>
           </div>
           <div>
-            <div className="text-[26px] font-extrabold">100%</div>
+            <div className="flex items-center justify-center gap-1.5 text-[26px] font-extrabold">
+              <span className="anim-pulse inline-block h-2 w-2 rounded-full bg-hub-red" />
+              100%
+            </div>
             <div className="text-[12px] font-semibold uppercase tracking-wide text-hub-muted-2">Comunidade, por convite</div>
           </div>
-        </div>
+        </Reveal>
       </section>
 
       {/* Como funciona */}
       <section id="como-funciona" className="mx-auto max-w-[1080px] px-5 py-16 sm:px-7 md:px-16 md:py-24">
-        <div className="mb-10 text-center md:mb-14">
-          <div className="mb-3 flex items-center justify-center gap-2 text-[13px] font-extrabold uppercase tracking-wider text-hub-muted-2">
-            <span className="h-3 w-[3px] rounded-sm bg-hub-red" /> Como funciona
+        <Reveal className="mb-10 text-center md:mb-14">
+          <div className="mx-auto mb-4 flex max-w-[260px] items-baseline justify-center gap-2 border-b border-hub-line pb-3">
+            <span className="hub-section-tag">01</span>
+            <span className="text-[13px] font-extrabold uppercase tracking-wider text-hub-muted-2">Como funciona</span>
           </div>
           <h2 className="text-[28px] font-extrabold tracking-tight">Do currículo à entrevista, com clareza</h2>
-        </div>
+        </Reveal>
         <div className="grid gap-5 md:grid-cols-3">
-          {PASSOS.map((p) => (
-            <div
-              key={p.n}
-              className="rounded-2xl border border-hub-line bg-white p-7 shadow-[0_8px_24px_rgba(0,0,0,.06)] transition-all duration-[240ms] ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,.12)]"
-            >
-              <div className="mb-4 font-display text-[28px] text-hub-red">{p.n}</div>
-              <div className="mb-2 text-[15px] font-extrabold">{p.titulo}</div>
-              <p className="text-[13.5px] leading-relaxed text-hub-muted-2">{p.desc}</p>
-            </div>
+          {PASSOS.map((p, i) => (
+            <Reveal key={p.n} delay={i * 90} className="h-full">
+              <div className="group relative h-full overflow-hidden rounded-2xl border border-hub-line bg-white p-7 shadow-[0_8px_24px_rgba(0,0,0,.06)] transition-all duration-[240ms] ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,.12)]">
+                <span className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 bg-hub-red transition-transform duration-300 ease-out group-hover:scale-x-100" />
+                <div className="mb-4 font-display text-[28px] text-hub-red transition-transform duration-300 ease-out group-hover:-translate-y-0.5">
+                  {p.n}
+                </div>
+                <div className="mb-2 text-[15px] font-extrabold">{p.titulo}</div>
+                <p className="text-[13.5px] leading-relaxed text-hub-muted-2">{p.desc}</p>
+              </div>
+            </Reveal>
           ))}
         </div>
       </section>
 
       {/* CTA final */}
       <section className="px-5 pb-16 sm:px-7 md:px-16 md:pb-24">
-        <div className="mx-auto flex max-w-[1080px] flex-col items-center justify-between gap-6 rounded-[24px] bg-hub-black px-6 py-10 text-center text-white sm:px-10 sm:py-12 md:flex-row md:text-left">
+        <Reveal className="mx-auto flex max-w-[1080px] flex-col items-center justify-between gap-6 rounded-[24px] bg-hub-black px-6 py-10 text-center text-white sm:px-10 sm:py-12 md:flex-row md:text-left">
           <div>
             <div className="mb-2 text-[20px] font-extrabold">Faz parte da comunidade Poiema?</div>
             <p className="max-w-md text-[13.5px] leading-relaxed text-[#c9c9cf]">
@@ -149,7 +165,7 @@ function LandingPage({ vagasCount, empresasCount }: { vagasCount: number; empres
           >
             Entrar com meu convite
           </Link>
-        </div>
+        </Reveal>
       </section>
 
       {/* Footer */}
