@@ -98,7 +98,10 @@ export function PerfilClient({
   function mergeSkills(existing: CandidateSkill[], incoming: CandidateSkill[]): CandidateSkill[] {
     const existingKeys = new Set(existing.map((s) => s.name.trim().toLowerCase()));
     const newOnes = incoming
-      .filter((s) => !existingKeys.has(s.name.trim().toLowerCase()))
+      // A IA às vezes devolve um item com nome vazio (ex.: interpretou um
+      // cabeçalho de seção como se fosse uma habilidade) — descarta antes de
+      // mesclar para não criar linhas fantasmas na lista.
+      .filter((s) => s.name.trim() && !existingKeys.has(s.name.trim().toLowerCase()))
       .map(sanitizeSkill);
     return [...existing, ...newOnes].slice(0, MAX_ITEMS);
   }
@@ -111,7 +114,13 @@ export function PerfilClient({
       existing.map((e) => `${e.title.trim().toLowerCase()}|${e.company.trim().toLowerCase()}`)
     );
     const newOnes = incoming
-      .filter((e) => !existingKeys.has(`${e.title.trim().toLowerCase()}|${e.company.trim().toLowerCase()}`))
+      // Mesma lógica: descarta experiências sem cargo nem empresa (a IA já
+      // produziu isso ao interpretar um cabeçalho de seção como item).
+      .filter(
+        (e) =>
+          (e.title.trim() || e.company.trim()) &&
+          !existingKeys.has(`${e.title.trim().toLowerCase()}|${e.company.trim().toLowerCase()}`)
+      )
       .map(sanitizeExperience);
     return [...existing, ...newOnes].slice(0, MAX_ITEMS);
   }
@@ -143,21 +152,27 @@ export function PerfilClient({
         let addedExperiences = 0;
         let skillsTruncated = false;
         let experiencesTruncated = false;
+        // Calcula a mesclagem aqui, contra o `skills`/`experiences` atual do
+        // closure, em vez de dentro do callback de atualização do setState.
+        // Antes, addedSkills/addedExperiences eram preenchidos dentro do
+        // callback funcional passado a setSkills/setExperiences — mas esse
+        // callback só roda quando o React de fato processa a atualização,
+        // que não é síncrono com a chamada de setSkills. O setUploadMsg
+        // logo abaixo rodava antes disso, então a mensagem sempre lia os
+        // valores iniciais (0), mesmo quando a extração e a mesclagem
+        // funcionavam e populavam os campos corretamente — parecia que a IA
+        // não tinha extraído nada, mas na verdade só a mensagem estava errada.
         if (res.extraction.skills?.length) {
-          setSkills((prev) => {
-            const merged = mergeSkills(prev, res.extraction!.skills);
-            addedSkills = merged.length - prev.length;
-            skillsTruncated = merged.length >= MAX_ITEMS;
-            return merged;
-          });
+          const merged = mergeSkills(skills, res.extraction.skills);
+          addedSkills = merged.length - skills.length;
+          skillsTruncated = merged.length >= MAX_ITEMS;
+          setSkills(merged);
         }
         if (res.extraction.experiences?.length) {
-          setExperiences((prev) => {
-            const merged = mergeExperiences(prev, res.extraction!.experiences);
-            addedExperiences = merged.length - prev.length;
-            experiencesTruncated = merged.length >= MAX_ITEMS;
-            return merged;
-          });
+          const merged = mergeExperiences(experiences, res.extraction.experiences);
+          addedExperiences = merged.length - experiences.length;
+          experiencesTruncated = merged.length >= MAX_ITEMS;
+          setExperiences(merged);
         }
         // Formação e disponibilidade continuam sendo campos únicos (não uma
         // lista), então só preenchemos se o candidato ainda não tinha escrito nada.
