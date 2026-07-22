@@ -36,6 +36,30 @@ export function PerfilClient({
     setSkills((prev) => prev.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
   }
 
+  // Mescla o que já existia (adicionado à mão ou de um upload anterior) com o
+  // que a IA acabou de extrair do currículo, em vez de substituir a lista —
+  // assim nada que o candidato preencheu manualmente se perde. Dedup por
+  // nome (skills) ou cargo+empresa (experiências), ignorando maiúsculas e
+  // espaços nas pontas, para não duplicar quando o mesmo CV é reenviado.
+  function mergeSkills(existing: CandidateSkill[], incoming: CandidateSkill[]): CandidateSkill[] {
+    const existingKeys = new Set(existing.map((s) => s.name.trim().toLowerCase()));
+    const newOnes = incoming.filter((s) => !existingKeys.has(s.name.trim().toLowerCase()));
+    return [...existing, ...newOnes];
+  }
+
+  function mergeExperiences(
+    existing: CandidateExperience[],
+    incoming: CandidateExperience[]
+  ): CandidateExperience[] {
+    const existingKeys = new Set(
+      existing.map((e) => `${e.title.trim().toLowerCase()}|${e.company.trim().toLowerCase()}`)
+    );
+    const newOnes = incoming.filter(
+      (e) => !existingKeys.has(`${e.title.trim().toLowerCase()}|${e.company.trim().toLowerCase()}`)
+    );
+    return [...existing, ...newOnes];
+  }
+
   function handleUpload(file: File) {
     setUploadMsg(null);
     const fd = new FormData();
@@ -44,11 +68,29 @@ export function PerfilClient({
       const res = await uploadAndExtractCvAction(fd);
       if (res.cvUrl) setCvUrl(res.cvUrl);
       if (res.extraction) {
-        if (res.extraction.skills?.length) setSkills(res.extraction.skills);
-        if (res.extraction.experiences?.length) setExperiences(res.extraction.experiences);
-        if (res.extraction.education) setEducation(res.extraction.education);
-        if (res.extraction.availability) setAvailability(res.extraction.availability);
-        setUploadMsg("IA extraiu os dados abaixo — revise e clique em Salvar perfil.");
+        let addedSkills = 0;
+        let addedExperiences = 0;
+        if (res.extraction.skills?.length) {
+          setSkills((prev) => {
+            const merged = mergeSkills(prev, res.extraction!.skills);
+            addedSkills = merged.length - prev.length;
+            return merged;
+          });
+        }
+        if (res.extraction.experiences?.length) {
+          setExperiences((prev) => {
+            const merged = mergeExperiences(prev, res.extraction!.experiences);
+            addedExperiences = merged.length - prev.length;
+            return merged;
+          });
+        }
+        // Formação e disponibilidade continuam sendo campos únicos (não uma
+        // lista), então só preenchemos se o candidato ainda não tinha escrito nada.
+        if (res.extraction.education && !education) setEducation(res.extraction.education);
+        if (res.extraction.availability && !availability) setAvailability(res.extraction.availability);
+        setUploadMsg(
+          `IA extraiu do currículo: ${addedSkills} habilidade(s) e ${addedExperiences} experiência(s) novas, adicionadas junto com o que você já tinha. Revise abaixo e clique em Salvar perfil.`
+        );
       } else if (res.error) {
         setUploadMsg(res.error);
       }
