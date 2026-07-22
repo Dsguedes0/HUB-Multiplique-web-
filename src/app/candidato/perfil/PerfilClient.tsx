@@ -36,6 +36,14 @@ export function PerfilClient({
     setSkills((prev) => prev.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
   }
 
+  function removeSkill(i: number) {
+    setSkills((prev) => prev.filter((_, idx) => idx !== i));
+  }
+
+  function removeExperience(i: number) {
+    setExperiences((prev) => prev.filter((_, idx) => idx !== i));
+  }
+
   // Mescla o que já existia (adicionado à mão ou de um upload anterior) com o
   // que a IA acabou de extrair do currículo, em vez de substituir a lista —
   // assim nada que o candidato preencheu manualmente se perde. Dedup por
@@ -165,13 +173,23 @@ export function PerfilClient({
         )}
         {skills.map((s, i) => (
           <div key={i} className="mb-3">
-            <div className="mb-1.5 flex justify-between text-[12.5px] font-bold">
+            <div className="mb-1.5 flex items-center justify-between text-[12.5px] font-bold">
               <input
                 value={s.name}
                 onChange={(e) => updateSkill(i, { name: e.target.value })}
                 className="w-2/3 border-b border-transparent bg-transparent focus:border-hub-red focus:outline-none"
               />
-              <span>{s.level}%</span>
+              <div className="flex items-center gap-2">
+                <span>{s.level}%</span>
+                <button
+                  type="button"
+                  onClick={() => removeSkill(i)}
+                  aria-label="Remover habilidade"
+                  className="text-hub-muted hover:text-hub-red"
+                >
+                  ×
+                </button>
+              </div>
             </div>
             <input
               type="range"
@@ -195,6 +213,16 @@ export function PerfilClient({
         <SectionTitle>Experiências</SectionTitle>
         {experiences.map((exp, i) => (
           <div key={i} className="mb-3 rounded-lg border border-hub-line p-3">
+            <div className="mb-1 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => removeExperience(i)}
+                aria-label="Remover experiência"
+                className="text-hub-muted hover:text-hub-red"
+              >
+                ×
+              </button>
+            </div>
             <Input
               value={exp.title}
               placeholder="Cargo"
