@@ -99,3 +99,29 @@ export function SectionTitle({ children }: { children: ReactNode }) {
 export function EmptyNote({ children }: { children: ReactNode }) {
   return <div className="py-4 text-sm text-hub-muted">{children}</div>;
 }
+
+export function BarList({
+  items,
+}: {
+  items: { label: string; value: number }[];
+}) {
+  const max = Math.max(1, ...items.map((i) => i.value));
+  return (
+    <div className="space-y-3.5">
+      {items.map((item) => (
+        <div key={item.label}>
+          <div className="mb-1.5 flex justify-between gap-2 text-[12.5px] font-bold">
+            <span className="truncate">{item.label}</span>
+            <span className="flex-none">{item.value}</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-hub-line">
+            <div
+              className="h-full rounded-full bg-hub-red transition-[width] duration-500"
+              style={{ width: `${(item.value / max) * 100}%` }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
