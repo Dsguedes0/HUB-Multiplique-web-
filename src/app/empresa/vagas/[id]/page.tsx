@@ -19,9 +19,23 @@ export default async function VagaCandidatosPage({
 
   const { data: applications } = await supabase
     .from("applications")
-    .select("id, candidate_id, match_score, status, profiles(full_name), candidate_profiles(education, availability)")
+    .select("id, candidate_id, match_score, status, profiles(full_name)")
     .eq("job_id", id)
     .order("match_score", { ascending: false });
+
+  // candidate_profiles não tem FK direta para applications (ambas apontam
+  // pra profiles, não uma pra outra), então o PostgREST não consegue montar
+  // esse embed dentro do select acima — tentar isso faz a query inteira
+  // falhar e a lista aparece vazia, mesmo havendo candidaturas. Busca à
+  // parte, por id, e junta em memória.
+  const candidateIds = (applications ?? []).map((a) => a.candidate_id);
+  const { data: candidateProfiles } = candidateIds.length
+    ? await supabase
+        .from("candidate_profiles")
+        .select("id, education, availability")
+        .in("id", candidateIds)
+    : { data: [] };
+  const candidateProfileById = new Map((candidateProfiles ?? []).map((cp) => [cp.id, cp]));
 
   return (
     <div>
@@ -36,9 +50,7 @@ export default async function VagaCandidatosPage({
         <div className="space-y-2.5">
           {applications.map((a) => {
             const candidate = Array.isArray(a.profiles) ? a.profiles[0] : a.profiles;
-            const candidateProfile = Array.isArray(a.candidate_profiles)
-              ? a.candidate_profiles[0]
-              : a.candidate_profiles;
+            const candidateProfile = candidateProfileById.get(a.candidate_id);
             const name = candidate?.full_name ?? "Candidato";
             const subtitle = candidateProfile?.education || candidateProfile?.availability || "Candidatura recebida";
             const score = a.match_score ?? 0;
