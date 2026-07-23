@@ -60,7 +60,7 @@ export default function LoginPage() {
           </ul>
         </div>
         <div className="relative z-10 mt-10 border-t border-white/10 pt-5 text-[12.5px] text-hub-muted">
-          Hub Multiplique × Poiema — conectando pessoas e oportunidades reais em Taubaté e região.
+          Hub Multiplique × Poiema — conectando pessoas e oportunidades reais.
         </div>
       </div>
 

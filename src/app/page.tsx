@@ -49,6 +49,24 @@ const PASSOS = [
   },
 ];
 
+const PASSOS_EMPRESA = [
+  {
+    n: "01",
+    titulo: "Publique a vaga e o perfil ideal",
+    desc: "Descreva a posição e os requisitos — isso vira o gabarito que a IA usa para comparar cada candidato.",
+  },
+  {
+    n: "02",
+    titulo: "Ranking de match automático",
+    desc: "Cada candidato chega com o % de aderência à vaga e o porquê — sem filtrar currículo por currículo.",
+  },
+  {
+    n: "03",
+    titulo: "Entreviste só quem já bate o gabarito",
+    desc: "Veja o gap de cada candidato e decida com dados quem avança para a próxima etapa.",
+  },
+];
+
 function LandingPage({ vagasCount, empresasCount }: { vagasCount: number; empresasCount: number }) {
   return (
     <div className="min-h-screen bg-hub-paper">
@@ -150,6 +168,31 @@ function LandingPage({ vagasCount, empresasCount }: { vagasCount: number; empres
         </div>
       </section>
 
+      {/* Como funciona (empresas) */}
+      <section id="como-funciona-empresas" className="border-t border-hub-line bg-hub-paper px-5 py-16 sm:px-7 md:px-16 md:py-24">
+        <Reveal className="mb-10 text-center md:mb-14">
+          <div className="mx-auto mb-4 flex max-w-[260px] items-baseline justify-center gap-2 border-b border-hub-line pb-3">
+            <span className="hub-section-tag">01</span>
+            <span className="text-[13px] font-extrabold uppercase tracking-wider text-hub-muted-2">Como funciona</span>
+          </div>
+          <h2 className="text-[28px] font-extrabold tracking-tight">Da vaga aberta à contratação certa, com dados</h2>
+        </Reveal>
+        <div className="grid gap-5 md:grid-cols-3">
+          {PASSOS_EMPRESA.map((p, i) => (
+            <Reveal key={p.n} delay={i * 90} className="h-full">
+              <div className="group relative h-full overflow-hidden rounded-2xl border border-hub-line bg-white p-7 shadow-[0_8px_24px_rgba(0,0,0,.06)] transition-all duration-[240ms] ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,.12)]">
+                <span className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 bg-hub-red transition-transform duration-300 ease-out group-hover:scale-x-100" />
+                <div className="mb-4 font-display text-[28px] text-hub-red transition-transform duration-300 ease-out group-hover:-translate-y-0.5">
+                  {p.n}
+                </div>
+                <div className="mb-2 text-[15px] font-extrabold">{p.titulo}</div>
+                <p className="text-[13.5px] leading-relaxed text-hub-muted-2">{p.desc}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
       {/* CTA final */}
       <section className="px-5 pb-16 sm:px-7 md:px-16 md:pb-24">
         <Reveal className="mx-auto flex max-w-[1080px] flex-col items-center justify-between gap-6 rounded-[24px] bg-hub-black px-6 py-10 text-center text-white sm:px-10 sm:py-12 md:flex-row md:text-left">
@@ -173,7 +216,7 @@ function LandingPage({ vagasCount, empresasCount }: { vagasCount: number; empres
         <div className="mx-auto flex max-w-[1080px] flex-col items-center gap-4 text-center md:flex-row md:justify-between md:text-left">
           <LogoMark size={30} id="footer" />
           <div className="text-[12px] text-hub-muted">
-            Hub Multiplique × Poiema — conectando pessoas e oportunidades reais em Taubaté e região.
+            Hub Multiplique × Poiema — conectando pessoas e oportunidades reais.
           </div>
         </div>
       </footer>
