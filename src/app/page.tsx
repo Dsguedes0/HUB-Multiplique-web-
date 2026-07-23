@@ -95,11 +95,12 @@ function LandingPage({ vagasCount, empresasCount }: { vagasCount: number; empres
         />
         <div className="anim-in relative z-10 mx-auto max-w-[720px] text-center">
           <h1 className="mb-5 text-[clamp(30px,4.6vw,48px)] font-extrabold leading-[1.12] tracking-tight">
-            O trabalho certo pra quem faz parte da <span className="text-hub-red-light">nossa comunidade</span>.
+            O portal para o empreendedor que faz parte da <span className="text-hub-red-light">nossa comunidade</span>.
           </h1>
           <p className="mx-auto max-w-[540px] text-[15.5px] leading-relaxed text-[#c9c9cf]">
-            O Hub Multiplique conecta candidatos da comunidade Poiema a empresas parceiras, com uma
-            régua de match transparente e uma trilha de desenvolvimento gerada por IA para cada vaga.
+            O Hub Multiplique conecta empresários da comunidade Poiema e suas vagas de emprego com
+            candidatos certos. Os candidatos podem melhorar empregabilidade usando uma régua de match
+            transparente e uma trilha de desenvolvimento gerada por IA para cada vaga.
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3.5">
             <Link

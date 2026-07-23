@@ -37,12 +37,13 @@ export default function LoginPage() {
         />
         <div className="relative z-10">
           <h1 className="mb-4 max-w-[480px] text-[clamp(28px,3.4vw,40px)] font-extrabold leading-[1.14] tracking-tight">
-            O trabalho certo pra quem faz parte da{" "}
+            O portal para o empreendedor que faz parte da{" "}
             <span className="text-hub-red-light">nossa comunidade</span>.
           </h1>
           <p className="max-w-[420px] text-[15px] leading-relaxed text-[#c9c9cf]">
-            O Hub Multiplique conecta candidatos da comunidade Poiema a empresas parceiras, com uma
-            régua de match transparente e uma trilha de desenvolvimento gerada por IA para cada vaga.
+            O Hub Multiplique conecta empresários da comunidade Poiema e suas vagas de emprego com
+            candidatos certos. Os candidatos podem melhorar empregabilidade usando uma régua de match
+            transparente e uma trilha de desenvolvimento gerada por IA para cada vaga.
           </p>
           <ul className="mt-8 flex flex-col gap-4">
             {[
