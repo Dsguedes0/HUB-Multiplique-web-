@@ -23,12 +23,20 @@ export default async function Home() {
     redirect(roleHome(profile?.role));
   }
 
-  const [{ count: vagasCount }, { count: empresasCount }] = await Promise.all([
-    supabase.from("jobs").select("id", { count: "exact", head: true }).eq("status", "aberta"),
-    supabase.from("companies").select("id", { count: "exact", head: true }).eq("status", "ativa"),
-  ]);
+  // Usa uma RPC (security definer) em vez de contar direto nas tabelas:
+  // como o visitante da home ainda não está logado, as policies de RLS de
+  // jobs/companies (que só liberam SELECT para role 'candidato'/'empresa')
+  // sempre devolveriam 0 para o role anon, mesmo com dados reais no banco.
+  const { data: stats } = (await supabase.rpc("landing_stats").single()) as {
+    data: { vagas_abertas: number; empresas_ativas: number } | null;
+  };
 
-  return <LandingPage vagasCount={vagasCount ?? 0} empresasCount={empresasCount ?? 0} />;
+  return (
+    <LandingPage
+      vagasCount={stats?.vagas_abertas ?? 0}
+      empresasCount={stats?.empresas_ativas ?? 0}
+    />
+  );
 }
 
 const PASSOS = [
