@@ -7,6 +7,12 @@ import { Reveal } from "@/components/Reveal";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { ScrollProgress } from "@/components/ScrollProgress";
 
+// Força renderização dinâmica nesta rota. Sem isso, o Next pode tratar "/"
+// como estático/parcialmente pré-renderizado e cachear o HTML (incluindo os
+// contadores de vagas/empresas) no build ou no primeiro acesso, servindo o
+// mesmo resultado depois mesmo com o banco mudando.
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const supabase = await createClient();
   const {
@@ -27,9 +33,18 @@ export default async function Home() {
   // como o visitante da home ainda não está logado, as policies de RLS de
   // jobs/companies (que só liberam SELECT para role 'candidato'/'empresa')
   // sempre devolveriam 0 para o role anon, mesmo com dados reais no banco.
-  const { data: stats } = (await supabase.rpc("landing_stats").single()) as {
+  const { data: stats, error: statsError } = (await supabase
+    .rpc("landing_stats")
+    .single()) as {
     data: { vagas_abertas: number; empresas_ativas: number } | null;
+    error: { message: string } | null;
   };
+
+  if (statsError) {
+    // Não deve derrubar a home por causa disso — só loga pra aparecer nos
+    // runtime logs da Vercel caso a RPC volte a falhar por algum motivo.
+    console.error("landing_stats() falhou:", statsError.message);
+  }
 
   return (
     <LandingPage
