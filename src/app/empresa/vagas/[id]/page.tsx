@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/DashboardShell";
 import { EmptyNote } from "@/components/ui";
@@ -18,7 +19,7 @@ export default async function VagaCandidatosPage({
 
   const { data: applications } = await supabase
     .from("applications")
-    .select("id, match_score, status, profiles(full_name)")
+    .select("id, candidate_id, match_score, status, profiles(full_name), candidate_profiles(education, availability)")
     .eq("job_id", id)
     .order("match_score", { ascending: false });
 
@@ -35,7 +36,11 @@ export default async function VagaCandidatosPage({
         <div className="space-y-2.5">
           {applications.map((a) => {
             const candidate = Array.isArray(a.profiles) ? a.profiles[0] : a.profiles;
+            const candidateProfile = Array.isArray(a.candidate_profiles)
+              ? a.candidate_profiles[0]
+              : a.candidate_profiles;
             const name = candidate?.full_name ?? "Candidato";
+            const subtitle = candidateProfile?.education || candidateProfile?.availability || "Candidatura recebida";
             const score = a.match_score ?? 0;
             const barColor = score >= 75 ? "#2f9e5b" : score >= 55 ? "#dba53a" : "#d9534f";
             return (
@@ -43,7 +48,10 @@ export default async function VagaCandidatosPage({
                 key={a.id}
                 className="flex flex-col gap-3.5 rounded-xl border border-hub-line bg-white p-4 transition-colors duration-200 hover:bg-hub-paper sm:flex-row sm:items-center sm:justify-between sm:p-4.5"
               >
-                <div className="flex items-center gap-3.5">
+                <Link
+                  href={`/empresa/vagas/${id}/candidatos/${a.candidate_id}`}
+                  className="flex items-center gap-3.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-hub-red"
+                >
                   <div
                     className="flex h-11 w-11 flex-none items-center justify-center rounded-[10px] text-[15px] font-extrabold text-white"
                     style={{ background: initialColor(name) }}
@@ -51,10 +59,10 @@ export default async function VagaCandidatosPage({
                     {name[0]}
                   </div>
                   <div>
-                    <div className="text-[14.5px] font-extrabold">{name}</div>
-                    <div className="text-xs text-hub-muted-2">Candidatura recebida</div>
+                    <div className="text-[14.5px] font-extrabold hover:underline">{name}</div>
+                    <div className="text-xs text-hub-muted-2">{subtitle}</div>
                   </div>
-                </div>
+                </Link>
                 <div className="flex flex-wrap items-center gap-3 sm:flex-nowrap">
                   <div className="min-w-[80px] flex-1 sm:w-[140px] sm:flex-none">
                     <div className="h-2 overflow-hidden rounded-full bg-hub-line">
