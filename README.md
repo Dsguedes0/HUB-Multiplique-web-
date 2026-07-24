@@ -90,9 +90,3 @@ supabase/migrations/        schema completo + RLS, em ordem
 | `npm run lint` | ESLint |
 
 ---
-
-## Notas
-
-- Deploy: Vercel (mesmas variáveis de ambiente do `.env.local`, configuradas no projeto).
-- Confirmação de e-mail está desativada no Supabase (Authentication → Sign In / Providers → Email) devido ao limite de envio do mailer padrão. Reativar depois de configurar SMTP customizado.
-- Trocar o provedor de IA (ex. Groq, Claude) só requer editar `src/lib/ai/`.
