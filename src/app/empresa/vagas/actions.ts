@@ -36,20 +36,16 @@ export async function createJobAction(
     return { error: "Sua empresa ainda não foi aprovada pelo Hub Multiplique." };
   }
 
-  // Requisitos agora chegam como JSON (montado pelo RequirementsEditor no
-  // cliente), com peso e nível mínimo configuráveis por habilidade — antes
-  // todo requisito era gravado com weight:3/level_required:60 fixos, o que
-  // reduzia a régua de match a um cálculo essencialmente de peso igual,
-  // apesar do motor de match já suportar diferenciação (ver auditoria de
-  // código, item #19).
+  // Requisitos chegam como JSON do RequirementsEditor, com peso e nível
+  // mínimo configuráveis por habilidade.
   let requirements: JobRequirement[] = [];
   const requirementsRaw = String(formData.get("requirementsJson") || "[]");
   try {
     const parsedRequirements = z.array(jobRequirementSchema).safeParse(JSON.parse(requirementsRaw));
     if (parsedRequirements.success) requirements = parsedRequirements.data;
   } catch {
-    // JSON malformado é tratado como "sem requisitos" — melhor publicar a
-    // vaga sem requisitos do que falhar a criação inteira por causa disso.
+    // JSON malformado vira "sem requisitos" — melhor publicar a vaga assim
+    // do que falhar a criação inteira por causa disso.
   }
 
   const parsed = createJobSchema.safeParse({
@@ -89,15 +85,12 @@ export async function updateApplicationStatusAction(applicationId: string, statu
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Não autenticado.");
 
-  // O <select> só oferece os valores válidos, mas a action em si é um
-  // endpoint chamável diretamente — validar contra o enum evita gravar um
-  // status arbitrário no banco (ver auditoria de código, item #1).
+  // A action é um endpoint chamável diretamente, então valida contra o enum
+  // mesmo com o <select> já restringindo os valores no cliente.
   const parsedStatus = applicationStatusSchema.safeParse(status);
   if (!parsedStatus.success) throw new Error("Status inválido.");
 
-  // Checagem explícita de posse (a candidatura precisa pertencer a uma vaga
-  // de uma empresa do próprio usuário) além da política de RLS — defesa em
-  // profundidade (ver auditoria de código, item #7).
+  // Checagem explícita de posse além da RLS — defesa em profundidade.
   const { data: application } = await supabase
     .from("applications")
     .select("id, jobs(company_id, companies(owner_id))")

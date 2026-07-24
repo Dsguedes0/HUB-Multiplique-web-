@@ -2,11 +2,7 @@
 
 import { useEffect } from "react";
 
-/**
- * Error boundary de última instância — antes inexistente em qualquer nível
- * da árvore de rotas, o que deixava qualquer exceção não tratada cair na
- * tela de erro genérica do Next.js (ver auditoria de código, item #9).
- */
+/** Error boundary de última instância para exceções não tratadas na árvore de rotas. */
 export default function GlobalError({
   error,
   reset,

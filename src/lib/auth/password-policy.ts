@@ -1,8 +1,4 @@
-/**
- * Tamanho mínimo de senha único para cadastro e redefinição — antes
- * inconsistente (6 no cadastro, 8 na redefinição). Ver auditoria de
- * código, item #12.
- */
+/** Tamanho mínimo de senha, único para cadastro e redefinição. */
 export const MIN_PASSWORD_LENGTH = 8;
 
 export function passwordError(password: string): string | null {

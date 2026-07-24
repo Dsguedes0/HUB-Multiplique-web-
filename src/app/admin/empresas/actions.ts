@@ -4,8 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/supabase/require-user";
 
 export async function approveCompanyAction(companyId: string) {
-  // Checagem explícita de papel além da política de RLS — defesa em
-  // profundidade (ver auditoria de código, item #7).
+  // Checagem explícita de papel além da RLS — defesa em profundidade.
   const { supabase } = await requireRole("admin");
   const { error } = await supabase
     .from("companies")

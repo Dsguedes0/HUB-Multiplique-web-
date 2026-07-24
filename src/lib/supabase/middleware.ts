@@ -49,9 +49,8 @@ export async function updateSession(request: NextRequest) {
       .single();
 
     const role = profile?.role ?? "candidato";
-    // Comparação por segmento de rota (não só por prefixo de string) —
-    // path.startsWith(`/${role}`) trataria incorretamente uma futura rota
-    // como "/empresarial" como pertencente ao papel "empresa".
+    // Compara por segmento de rota, não por prefixo — evita que uma rota
+    // como "/empresarial" seja tratada como pertencente ao papel "empresa".
     const areaOk = path === `/${role}` || path.startsWith(`/${role}/`);
 
     if (!areaOk) {

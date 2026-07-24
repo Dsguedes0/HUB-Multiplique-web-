@@ -78,9 +78,7 @@ export async function generateTrackAction(
     } = await supabase.auth.getUser();
     if (!user) return { error: "Não autenticado." };
 
-    // Guarda de frequência para proteger a cota diária compartilhada do
-    // Gemini (ver auditoria de código, item #6) — olha a última geração de
-    // trilha desta candidatura específica.
+    // Cooldown contra a cota diária compartilhada do Gemini, por candidatura.
     const { data: lastTrack } = await supabase
       .from("development_tracks")
       .select("generated_at")

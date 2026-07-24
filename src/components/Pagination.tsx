@@ -1,12 +1,6 @@
 import Link from "next/link";
 
-/**
- * Paginação simples baseada em URL (?page=N), reaproveitando o mesmo
- * padrão de searchParams já usado pelos filtros de EmpresasFilterBar.
- * Antes nenhuma listagem paginava — tudo era carregado de uma vez a cada
- * render, o que piora conforme a base de dados cresce (ver auditoria de
- * código, item #11).
- */
+/** Paginação via URL (?page=N), no mesmo padrão do EmpresasFilterBar. */
 export function Pagination({
   basePath,
   params,

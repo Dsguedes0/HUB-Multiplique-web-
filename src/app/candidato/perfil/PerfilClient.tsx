@@ -5,9 +5,8 @@ import { Card, SectionTitle, Label, Input, Button, Tag } from "@/components/ui";
 import { saveProfileAction, uploadAndExtractCvAction, deleteCvAction } from "./actions";
 import type { CandidateExperience, CandidateSkill } from "@/types/database";
 
-// Precisa espelhar os limites de src/lib/validation/profile.ts — o servidor
-// rejeita (e o handleSave abaixo mostra o erro) qualquer payload fora
-// desses limites, então truncamos aqui antes mesmo de chegar lá.
+// Precisa espelhar os limites de lib/validation/profile.ts — o servidor
+// rejeita qualquer payload fora disso.
 const MAX_ITEMS = 30;
 const SKILL_NAME_MAX = 60;
 const EXP_TEXT_MAX = 120;
@@ -86,21 +85,13 @@ export function PerfilClient({
     setExperiences((prev) => prev.filter((_, idx) => idx !== i));
   }
 
-  // Mescla o que já existia (adicionado à mão ou de um upload anterior) com o
-  // que a IA acabou de extrair do currículo, em vez de substituir a lista —
-  // assim nada que o candidato preencheu manualmente se perde. Dedup por
-  // nome (skills) ou cargo+empresa (experiências), ignorando maiúsculas e
-  // espaços nas pontas, para não duplicar quando o mesmo CV é reenviado.
-  // Também sanitiza (trunca nomes/descrições) e limita a MAX_ITEMS — sem
-  // isso, um currículo extenso gera uma lista maior que o schema do
-  // servidor aceita e o "Salvar perfil" falha com um erro genérico (visto
-  // em produção: "Array must contain at most 30 element(s)").
+  // Mescla com o que já existia em vez de substituir, pra não perder dados
+  // preenchidos à mão. Dedup por nome (case/espaços-insensitive) e trunca +
+  // limita a MAX_ITEMS — sem isso um CV extenso estourava o schema do servidor.
   function mergeSkills(existing: CandidateSkill[], incoming: CandidateSkill[]): CandidateSkill[] {
     const existingKeys = new Set(existing.map((s) => s.name.trim().toLowerCase()));
     const newOnes = incoming
-      // A IA às vezes devolve um item com nome vazio (ex.: interpretou um
-      // cabeçalho de seção como se fosse uma habilidade) — descarta antes de
-      // mesclar para não criar linhas fantasmas na lista.
+      // A IA às vezes lê um cabeçalho de seção como se fosse uma habilidade.
       .filter((s) => s.name.trim() && !existingKeys.has(s.name.trim().toLowerCase()))
       .map(sanitizeSkill);
     return [...existing, ...newOnes].slice(0, MAX_ITEMS);
@@ -114,8 +105,7 @@ export function PerfilClient({
       existing.map((e) => `${e.title.trim().toLowerCase()}|${e.company.trim().toLowerCase()}`)
     );
     const newOnes = incoming
-      // Mesma lógica: descarta experiências sem cargo nem empresa (a IA já
-      // produziu isso ao interpretar um cabeçalho de seção como item).
+      // Mesma lógica, para experiências sem cargo nem empresa.
       .filter(
         (e) =>
           (e.title.trim() || e.company.trim()) &&
@@ -134,13 +124,9 @@ export function PerfilClient({
       try {
         res = await uploadAndExtractCvAction(fd);
       } catch {
-        // Sem este catch, uma falha aqui (ex.: a aba ficou aberta durante um
-        // deploy e o Server Action referenciado não existe mais nessa versão
-        // — "Failed to find Server Action") virava uma promise rejeitada
-        // silenciosa: nada de mensagem, nada de skills/experiências, só a
-        // tag estática de "currículo enviado" continuava visível, sem
-        // nenhum sinal de que o envio falhou. Um F5 na página resolve esse
-        // caso específico (recarrega o código mais recente).
+        // Uma aba aberta durante um deploy pode referenciar um Server Action
+        // que não existe mais ("Failed to find Server Action") — sem este
+        // catch a falha era uma promise rejeitada silenciosa. F5 resolve.
         setUploadMsg(
           "Não foi possível processar o currículo. Atualize a página (F5) e tente enviar novamente."
         );
@@ -152,16 +138,9 @@ export function PerfilClient({
         let addedExperiences = 0;
         let skillsTruncated = false;
         let experiencesTruncated = false;
-        // Calcula a mesclagem aqui, contra o `skills`/`experiences` atual do
-        // closure, em vez de dentro do callback de atualização do setState.
-        // Antes, addedSkills/addedExperiences eram preenchidos dentro do
-        // callback funcional passado a setSkills/setExperiences — mas esse
-        // callback só roda quando o React de fato processa a atualização,
-        // que não é síncrono com a chamada de setSkills. O setUploadMsg
-        // logo abaixo rodava antes disso, então a mensagem sempre lia os
-        // valores iniciais (0), mesmo quando a extração e a mesclagem
-        // funcionavam e populavam os campos corretamente — parecia que a IA
-        // não tinha extraído nada, mas na verdade só a mensagem estava errada.
+        // Calcula a mesclagem contra o estado atual do closure, não dentro
+        // do callback de setSkills/setExperiences: esse callback roda de
+        // forma assíncrona, e o setUploadMsg abaixo sempre lia 0 antes disso.
         if (res.extraction.skills?.length) {
           const merged = mergeSkills(skills, res.extraction.skills);
           addedSkills = merged.length - skills.length;
@@ -174,8 +153,7 @@ export function PerfilClient({
           experiencesTruncated = merged.length >= MAX_ITEMS;
           setExperiences(merged);
         }
-        // Formação e disponibilidade continuam sendo campos únicos (não uma
-        // lista), então só preenchemos se o candidato ainda não tinha escrito nada.
+        // Só preenche se o candidato ainda não tinha escrito nada.
         if (res.extraction.education && !education) setEducation(res.extraction.education);
         if (res.extraction.availability && !availability) setAvailability(res.extraction.availability);
         const truncationNote =
@@ -188,8 +166,7 @@ export function PerfilClient({
       } else if (res.error) {
         setUploadMsg(res.error);
       } else {
-        // Não deveria acontecer (a action sempre retorna extraction ou
-        // error), mas evita ficar sem nenhum feedback caso isso mude.
+        // Não deveria acontecer (a action sempre retorna extraction ou error).
         setUploadMsg("Currículo enviado, mas a IA não retornou nada. Tente novamente em instantes.");
       }
     });
@@ -210,12 +187,8 @@ export function PerfilClient({
         });
         setSaveOk(true);
       } catch (err) {
-        // saveProfileAction lança um Error com uma mensagem amigável quando a
-        // validação (zod) falha — ex.: mais de 30 habilidades/experiências ou
-        // uma descrição com mais de 500 caracteres, comum quando a IA extrai
-        // muita coisa do currículo. Sem este catch, o erro não tratado
-        // derrubava a página inteira em produção ("Não foi possível carregar
-        // esta página" / Server Components render error).
+        // Sem este catch, um erro de validação (zod) do saveProfileAction
+        // derrubava a página inteira em produção.
         setSaveError(
           err instanceof Error ? err.message : "Não foi possível salvar o perfil. Tente novamente."
         );

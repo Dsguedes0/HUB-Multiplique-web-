@@ -1,124 +1,98 @@
 # Hub Multiplique — Vagas
 
-App interno (fechado à comunidade) para conectar empresas parceiras do Hub
-Multiplique a candidatos da comunidade Poiema. Ver o documento de arquitetura
-na pasta do projeto para o desenho completo.
+Plataforma interna que conecta empresas parceiras do Hub Multiplique a candidatos da comunidade Poiema, com match automatizado e trilha de desenvolvimento gerada por IA.
 
-Stack: **Next.js 16 (App Router) · Supabase (auth + Postgres + storage) ·
-Gemini 2.5 Flash (IA, free tier)**. Custo de hospedagem: R$0 nos free tiers.
+**Stack:** Next.js 16 (App Router) · Supabase (Auth, Postgres, Storage) · Gemini 2.5 Flash
 
 ---
 
-## 1. Pré-requisitos
+## Pré-requisitos
 
-- Node.js 18 ou mais recente (`node -v` para conferir)
-- Uma conta gratuita no [Supabase](https://supabase.com)
-- Uma conta Google para gerar a chave gratuita do [Google AI Studio](https://aistudio.google.com/apikey) (Gemini)
-
-Nenhuma das duas pede cartão de crédito para o uso no free tier.
+- Node.js 18+
+- Projeto no [Supabase](https://supabase.com) (free tier)
+- Chave de API do [Google AI Studio](https://aistudio.google.com/apikey) (free tier)
 
 ---
 
-## 2. Criar o projeto no Supabase
+## Setup
 
-1. Acesse [supabase.com](https://supabase.com) → **Start your project** → crie
-   uma conta (dá pra usar login com GitHub/Google) → **New project**.
-2. Dê um nome (ex: `hub-multiplique`), escolha uma senha de banco (guarde-a,
-   mas ela não é usada no app) e a região mais próxima (`South America`).
-3. Espere o projeto terminar de provisionar (1-2 minutos).
+**1. Instale as dependências**
 
-### Rodar o schema do banco
+```bash
+npm install
+```
 
-1. No menu lateral do projeto, abra **SQL Editor** → **New query**.
-2. Abra o arquivo `supabase/migrations/0001_init.sql` deste projeto, copie
-   todo o conteúdo e cole no editor.
-3. Clique em **Run**. Isso cria todas as tabelas, as regras de segurança
-   (Row Level Security) e os buckets de arquivo (`cvs` e `logos`).
+**2. Rode as migrations**
 
-### Pegar as chaves da API
+No SQL Editor do Supabase, execute os arquivos de `supabase/migrations/` em ordem (0001 a 0007). Cada um é idempotente.
 
-1. No menu lateral: **Project Settings** → **API**.
-2. Copie:
-   - **Project URL** → vai em `NEXT_PUBLIC_SUPABASE_URL`
-   - **anon public** key → vai em `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - **service_role** key (em "Project API keys", clique em "Reveal") → vai em
-     `SUPABASE_SERVICE_ROLE_KEY` — **essa chave é secreta, nunca a exponha no
-     frontend nem suba pra um repositório público.**
-
----
-
-## 3. Gerar a chave gratuita do Gemini
-
-1. Acesse [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
-2. Faça login com uma conta Google e clique em **Create API key**.
-3. Copie a chave → vai em `GEMINI_API_KEY`.
-
-O free tier do Gemini Flash dá ~1.500 requisições/dia sem pedir cartão —
-mais do que suficiente para o volume esperado do Hub. **Importante:** não
-ative billing nesse projeto do Google, ou o free tier some. Se um dia
-precisar trocar de provedor de IA (Groq, Claude, etc.), toda a lógica está
-isolada em `src/lib/ai/` — troque só ali.
-
----
-
-## 4. Configurar e rodar o app
+**3. Configure as variáveis de ambiente**
 
 ```bash
 cp .env.example .env.local
-# edite .env.local e cole as 4 chaves que você pegou acima
+```
 
-npm install
+| Variável | Onde encontrar |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Project Settings → API → Project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Project Settings → API → anon public |
+| `SUPABASE_SERVICE_ROLE_KEY` | Project Settings → API → service_role — **secreta, nunca exponha no frontend** |
+| `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com/apikey) |
+| `GEMINI_MODEL` | opcional, default `gemini-2.5-flash` |
+
+**4. Rode o projeto**
+
+```bash
 npm run dev
 ```
 
-Abra [http://localhost:3000](http://localhost:3000).
+→ [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 5. Criar o primeiro admin
+## Primeiro admin
 
-Ninguém se cadastra como admin pelo app (por segurança). Depois de rodar o
-app e criar sua própria conta pela tela de **cadastro de empresa** ou pedindo
-pra alguém te convidar como candidato, promova essa conta a admin direto no
-Supabase:
+Ninguém se cadastra como admin pelo app. Crie uma conta (candidato ou empresa) e promova-a via SQL Editor:
 
-1. **SQL Editor** → **New query**:
-   ```sql
-   update public.profiles set role = 'admin' where email = 'seu-email@aqui.com';
-   ```
-2. Rode. Da próxima vez que você logar em `/login`, vai cair no painel admin.
-
-Do painel admin (`/admin/convites`) você já consegue gerar códigos de
-convite para os primeiros candidatos da comunidade, e (`/admin/empresas`)
-aprovar as primeiras empresas parceiras.
+```sql
+update public.profiles set role = 'admin' where email = 'seu-email@aqui.com';
+```
 
 ---
 
-## 6. Estrutura do projeto
+## Estrutura
 
 ```
 src/
   app/
-    login/, signup/candidato/, signup/empresa/   → autenticação e cadastro
-    candidato/                                    → vagas, régua de match, trilha de IA, perfil
-    empresa/                                      → dados da empresa, vagas, ranking de candidatos
-    admin/                                        → aprovação de empresas, convites, métricas
-  components/                                     → Logo, Régua, DashboardShell, UI (Card/Button/Tag...)
+    login/, signup/       autenticação e cadastro
+    candidato/             vagas, régua de match, trilha de IA, perfil
+    empresa/                dados da empresa, vagas, candidatos
+    admin/                   aprovação de empresas, convites, métricas
+  components/               UI compartilhada
   lib/
-    supabase/                                     → clientes browser/server/admin + middleware de sessão
-    match/score.ts                                → motor de match determinístico (não usa IA)
-    ai/provider.ts, ai/gemini.ts                  → camada de IA (troque o provedor só aqui)
-  types/database.ts                               → tipos das tabelas
-supabase/migrations/0001_init.sql                 → schema completo + RLS
+    supabase/                clientes (browser/server/admin) e middleware de sessão
+    match/score.ts            motor de match determinístico (sem IA)
+    ai/                        camada de IA — provider trocável em ai/provider.ts
+  types/database.ts          tipos das tabelas
+supabase/migrations/        schema completo + RLS, em ordem
 ```
 
 ---
 
-## 7. Próximos passos (fora do escopo desta etapa)
+## Scripts
 
-- **Deploy em produção**: `vercel deploy` (o app já está pronto pro Vercel
-  free tier — só configurar as mesmas variáveis de ambiente lá).
-- Notificações por e-mail (convite, aprovação, vaga compatível).
-- Upload de logo da empresa (o bucket `logos` já existe na migration).
-- Refinar o motor de match (`src/lib/match/score.ts`) com mais critérios
-  conforme o uso real mostrar o que falta.
+| Comando | Descrição |
+|---|---|
+| `npm run dev` | ambiente de desenvolvimento |
+| `npm run build` | build de produção |
+| `npm run start` | serve o build de produção |
+| `npm run lint` | ESLint |
+
+---
+
+## Notas
+
+- Deploy: Vercel (mesmas variáveis de ambiente do `.env.local`, configuradas no projeto).
+- Confirmação de e-mail está desativada no Supabase (Authentication → Sign In / Providers → Email) devido ao limite de envio do mailer padrão. Reativar depois de configurar SMTP customizado.
+- Trocar o provedor de IA (ex. Groq, Claude) só requer editar `src/lib/ai/`.

@@ -1,14 +1,9 @@
 import "server-only";
 
 /**
- * Guarda simples de frequência para as duas Server Actions que chamam a API
- * do Gemini (extração de currículo e geração de trilha). O free tier do
- * Gemini Flash tem cota diária compartilhada por todo o projeto — sem
- * nenhum limite por usuário, uma única conta poderia esgotá-la sozinha e
- * derrubar a funcionalidade de IA para toda a comunidade (ver auditoria de
- * código, item #6). Isso não substitui um controle de cota mais robusto
- * (ex.: contador diário global), mas evita o caso mais comum de abuso:
- * chamadas repetidas em sequência.
+ * Cooldown contra abuso da cota diária do Gemini free tier, que é
+ * compartilhada por todo o projeto. Não substitui um controle de cota real,
+ * só evita o abuso mais comum: chamadas repetidas em sequência.
  */
 const COOLDOWN_MS = 60_000;
 

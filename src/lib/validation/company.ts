@@ -1,11 +1,9 @@
 import { z } from "zod";
 
 /**
- * Normaliza e valida a URL do site da empresa, garantindo que só esquemas
- * http/https sejam persistidos. Sem essa checagem, um valor como
- * "javascript:..." ficava gravado e era renderizado sem sanitização como
- * `href` do card da empresa em /candidato/empresas e /empresa/empresas —
- * um vetor de XSS armazenado (ver auditoria de código, item #2).
+ * Aceita só esquemas http/https. Sem essa checagem, um valor como
+ * "javascript:..." era persistido e renderizado sem sanitização no `href`
+ * do card da empresa — um vetor de XSS armazenado.
  */
 export function sanitizeUrl(raw: string): string | null {
   const value = raw.trim();

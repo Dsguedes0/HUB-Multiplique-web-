@@ -1,10 +1,6 @@
 import type { ApplicationStatus } from "@/types/database";
 
-/**
- * Labels e "tons" (cores de Tag) para o status de uma candidatura. Fonte
- * única — antes duplicada entre a tela do candidato e a do StatusSelect da
- * empresa (ver auditoria de código, item #17).
- */
+/** Labels e tons (cor da Tag) por status de candidatura — fonte única. */
 export const APPLICATION_STATUS_OPTIONS = [
   "candidatou",
   "visualizado",

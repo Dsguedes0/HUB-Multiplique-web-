@@ -20,9 +20,6 @@ export function GenerateButton() {
             try {
               await generateInviteAction(50, 30);
             } catch (err) {
-              // generateInviteAction lança exceção em caso de erro; sem
-              // este catch o usuário não via nenhum feedback (ver
-              // auditoria de código, item #9).
               setError(err instanceof Error ? err.message : "Erro ao gerar convite.");
             }
           });

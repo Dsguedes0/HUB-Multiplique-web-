@@ -20,9 +20,6 @@ export function StatusSelect({ applicationId, status }: { applicationId: string;
             try {
               await updateApplicationStatusAction(applicationId, next);
             } catch (err) {
-              // As Server Actions chamadas aqui lançam exceção em caso de
-              // erro; sem este catch, useTransition não tinha nenhum jeito
-              // de mostrar isso ao usuário (ver auditoria de código, item #9).
               setError(err instanceof Error ? err.message : "Erro ao atualizar status.");
             }
           });

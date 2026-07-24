@@ -43,10 +43,8 @@ export async function signUpEmpresaAction(
   });
 
   if (companyError) {
-    // 23505 = unique_violation. Com a constraint companies_owner_id_key
-    // (migration 0003), isso indica que já existe uma empresa para esse
-    // usuário — normalmente por um reenvio do formulário após uma falha
-    // parcial anterior (auth.signUp já tinha criado a conta).
+    // 23505 = unique_violation na constraint companies_owner_id_key — já
+    // existe empresa para esse usuário (reenvio do form após falha parcial).
     if (companyError.code === "23505") {
       return {
         error:

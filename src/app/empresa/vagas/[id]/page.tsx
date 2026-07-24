@@ -24,10 +24,7 @@ export default async function VagaCandidatosPage({
     .order("match_score", { ascending: false });
 
   // candidate_profiles não tem FK direta para applications (ambas apontam
-  // pra profiles, não uma pra outra), então o PostgREST não consegue montar
-  // esse embed dentro do select acima — tentar isso faz a query inteira
-  // falhar e a lista aparece vazia, mesmo havendo candidaturas. Busca à
-  // parte, por id, e junta em memória.
+  // pra profiles) — o PostgREST não monta esse embed. Busca à parte e junta em memória.
   const candidateIds = (applications ?? []).map((a) => a.candidate_id);
   const { data: candidateProfiles } = candidateIds.length
     ? await supabase

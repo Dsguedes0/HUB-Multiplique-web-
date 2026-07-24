@@ -8,8 +8,7 @@ function randomCode() {
 }
 
 export async function generateInviteAction(maxUses: number, daysValid: number) {
-  // Checagem explícita de papel além da política de RLS — defesa em
-  // profundidade (ver auditoria de código, item #7).
+  // Checagem explícita de papel além da RLS — defesa em profundidade.
   const { supabase, user } = await requireRole("admin");
 
   const expiresAt = new Date();

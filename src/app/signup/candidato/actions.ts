@@ -27,10 +27,8 @@ export async function signUpCandidatoAction(
 
   const supabase = await createClient();
 
-  // Só verifica a validade do convite aqui (sem consumir um uso). O convite
-  // só é efetivamente gasto depois que o cadastro tiver sucesso — antes,
-  // qualquer falha no signUp (e-mail duplicado, instabilidade da Auth, etc.)
-  // já queimava um uso do convite sem nenhuma conta ter sido criada.
+  // Só checa validade aqui, sem consumir — o convite é gasto depois que o
+  // signUp tiver sucesso, para não queimar um uso em falhas de cadastro.
   const { data: valid, error: checkError } = await supabase.rpc(
     "check_invite_code",
     { p_code: inviteCode }
@@ -56,11 +54,9 @@ export async function signUpCandidatoAction(
   );
 
   if (redeemError || !redeemed) {
-    // Caso raro de corrida entre a checagem e o consumo (ex.: dois
-    // cadastros simultâneos com o último uso disponível do mesmo código).
-    // A conta já foi criada nesse ponto — não há como desfazer o signUp
-    // aqui, então sinalizamos e deixamos seguir; vale registrar/alertar
-    // esse caso em produção.
+    // Corrida rara entre checagem e consumo (dois cadastros simultâneos no
+    // último uso do código). A conta já foi criada e não dá pra desfazer o
+    // signUp aqui, então só sinalizamos.
     return {
       error:
         "Conta criada, mas o código de convite não pôde ser confirmado (pode ter sido usado por outra pessoa ao mesmo tempo). Entre em contato com o Hub Multiplique.",

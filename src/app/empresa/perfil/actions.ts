@@ -31,12 +31,8 @@ export async function updateCompanyAction(
     return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
   }
 
-  // O site da empresa é exibido como link (`<a href>`) para candidatos e
-  // outras empresas em /candidato/empresas e /empresa/empresas. Sem validar
-  // o esquema da URL, um valor como "javascript:..." ficava gravado e era
-  // renderizado sem sanitização — um vetor de XSS armazenado (ver auditoria
-  // de código, item #2). Um site com formato inválido é silenciosamente
-  // descartado (vira null) em vez de bloquear o salvamento do resto do perfil.
+  // URL inválida vira null silenciosamente, em vez de bloquear o resto do
+  // salvamento (sanitização contra XSS armazenado em sanitizeUrl()).
   const website = sanitizeUrl(String(formData.get("website") || ""));
 
   const { error } = await supabase

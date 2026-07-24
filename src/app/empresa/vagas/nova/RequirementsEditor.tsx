@@ -4,14 +4,7 @@ import { useState } from "react";
 import { Label, Input, Button } from "@/components/ui";
 import type { JobRequirement } from "@/types/database";
 
-/**
- * Permite configurar peso e nível mínimo por habilidade exigida pela vaga.
- * Antes, o formulário só aceitava uma lista de nomes separados por vírgula
- * e a action gravava weight:3/level_required:60 fixos para todas — a régua
- * de match nunca usava a diferenciação de importância que o próprio motor
- * de cálculo (src/lib/match/score.ts) já suporta (ver auditoria de código,
- * item #19).
- */
+/** Configura peso e nível mínimo por habilidade exigida pela vaga. */
 export function RequirementsEditor({ initial = [] }: { initial?: JobRequirement[] }) {
   const [rows, setRows] = useState<JobRequirement[]>(
     initial.length > 0 ? initial : [{ skill: "", weight: 3, level_required: 60 }]

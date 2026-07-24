@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 export async function POST(request: Request) {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  // 303 forces the browser to follow up with GET; the default 307 preserves
-  // POST, which made the browser re-POST to /login and get a 405 there.
+  // 303 força GET no redirect; o 307 padrão preservava o POST e causava 405 em /login.
   return NextResponse.redirect(new URL("/login", request.url), 303);
 }

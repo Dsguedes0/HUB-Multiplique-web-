@@ -15,10 +15,8 @@ export async function saveProfileAction(payload: ProfilePayload) {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Não autenticado.");
 
-  // Nenhuma validação de intervalo existia antes (ver auditoria de código,
-  // item #1) — level/months podiam ser negativos ou fora de escala e
-  // quebravam visualmente a régua de match. zod garante os limites aqui,
-  // independentemente do que a UI já filtra do lado do cliente.
+  // zod garante os limites (level/months etc.) independente do que a UI já
+  // filtra no cliente — sem isso a régua de match quebrava visualmente.
   const parsed = profilePayloadSchema.safeParse(payload);
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Dados de perfil inválidos.");
@@ -61,9 +59,7 @@ export async function uploadAndExtractCvAction(formData: FormData): Promise<CvUp
   } = await supabase.auth.getUser();
   if (!user) return { error: "Não autenticado." };
 
-  // O free tier do Gemini tem cota diária compartilhada por todo o projeto;
-  // sem um limite por usuário, chamadas repetidas poderiam esgotá-la para
-  // toda a comunidade (ver auditoria de código, item #6).
+  // Cooldown contra abuso da cota diária compartilhada do Gemini.
   const { data: existingProfile } = await supabase
     .from("candidate_profiles")
     .select("cv_parsed_at")
@@ -74,11 +70,8 @@ export async function uploadAndExtractCvAction(formData: FormData): Promise<CvUp
 
   const bytes = new Uint8Array(await file.arrayBuffer());
 
-  // `file.type` é só o Content-Type informado por quem monta a requisição —
-  // como esta action é um endpoint HTTP comum, nada garante que reflita o
-  // conteúdo real. Confirma a assinatura binária do PDF antes de armazenar
-  // e de repassar o arquivo para a API do Gemini (ver auditoria de código,
-  // item #10).
+  // `file.type` é só o Content-Type declarado pelo cliente, não garante o
+  // conteúdo real — confirma a assinatura binária do PDF antes de seguir.
   const header = new TextDecoder("latin1").decode(bytes.slice(0, 5));
   if (header !== "%PDF-") {
     return { error: "O arquivo não parece ser um PDF válido." };
@@ -127,9 +120,7 @@ export async function deleteCvAction(): Promise<CvDeleteResult> {
   const path = `${user.id}/curriculo.pdf`;
 
   const { error: removeError } = await supabase.storage.from("cvs").remove([path]);
-  // Ignora "objeto não existe" (o candidato pode ter apagado o arquivo do
-  // storage sem passar por essa action) — o que importa é limpar cv_url no
-  // perfil de qualquer forma.
+  // Ignora "objeto não existe" — o que importa é limpar cv_url de qualquer forma.
   if (removeError && !/not.*found/i.test(removeError.message)) {
     return { error: removeError.message };
   }

@@ -19,9 +19,7 @@ export default async function VagasCandidatoPage({
 
   const supabase = await createClient();
 
-  // Paginação no banco (.range()) em vez de carregar todas as vagas
-  // abertas de uma vez — evita que o payload e a query cresçam sem limite
-  // conforme mais empresas publicam vagas (ver auditoria de código, item #11).
+  // Paginação no banco (.range()) em vez de carregar tudo de uma vez.
   const { data: jobs, count } = await supabase
     .from("jobs")
     .select("id, title, modality, seniority, status, companies(name, city)", { count: "exact" })

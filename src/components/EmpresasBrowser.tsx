@@ -65,13 +65,9 @@ export async function EmpresasBrowser({
     list.sort((a, b) => b.openJobs - a.openJobs || a.name.localeCompare(b.name, "pt-BR"));
   }
 
-  // Paginação em memória sobre o resultado já filtrado/ordenado: mais
-  // simples e sem risco de "populares"/destaque ficarem incorretos entre
-  // páginas, ao custo de ainda buscar todas as empresas que batem com o
-  // filtro atual do banco a cada request. Uma paginação 100% no banco para
-  // o modo "destaque" exigiria ordenar por uma contagem agregada de vagas
-  // (uma view ou RPC no Postgres), o que fica como próximo passo se a base
-  // de empresas crescer muito (ver auditoria de código, item #11).
+  // Paginação em memória sobre o resultado já filtrado/ordenado — mais
+  // simples e sem risco de "populares" ficar incorreto entre páginas, ao
+  // custo de buscar todas as empresas que batem o filtro a cada request.
   const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
   const pageItems = list.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 

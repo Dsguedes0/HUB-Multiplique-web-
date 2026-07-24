@@ -43,9 +43,8 @@ export async function applyToJobAction(jobId: string) {
     status: "candidatou",
   });
 
-  // 23505 = unique_violation do Postgres (candidato já se candidatou a essa
-  // vaga) — checar pelo código é estável entre idiomas/versões, diferente
-  // de comparar o texto da mensagem (ver auditoria de código, item #8).
+  // 23505 = unique_violation (já se candidatou) — checa pelo código, não
+  // pelo texto da mensagem, que muda entre idiomas/versões do Postgres.
   if (error && error.code !== "23505") throw new Error(error.message);
 
   revalidatePath(`/candidato/vagas/${jobId}`);
