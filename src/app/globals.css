@@ -120,3 +120,80 @@ select {
   font-size: 13px;
   color: var(--hub-red);
 }
+
+/*
+ * Custom landing-page cursor (see components/CustomCursor.tsx): a solid dot that
+ * tracks the pointer exactly, plus a ring that trails behind with easing. Grows
+ * and fills red over links/buttons, disappears over text fields. Only enabled
+ * (via the .hub-cursor-active class added by the component) on fine-pointer
+ * devices with no reduced-motion preference, so touch/mobile keep the native cursor.
+ */
+.hub-cursor-dot,
+.hub-cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999;
+  border-radius: 9999px;
+  opacity: 0;
+  will-change: transform;
+  transition: opacity 0.2s ease;
+}
+
+.hub-cursor-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--hub-red);
+}
+
+.hub-cursor-dot--text {
+  opacity: 0 !important;
+}
+
+.hub-cursor-ring {
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid var(--hub-black);
+  transition:
+    opacity 0.2s ease,
+    width 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.hub-cursor-ring--hover {
+  width: 68px;
+  height: 68px;
+  background: rgba(232, 67, 46, 0.14);
+  border-color: var(--hub-red);
+}
+
+.hub-cursor-ring--active {
+  width: 26px;
+  height: 26px;
+}
+
+.hub-cursor-ring--text {
+  opacity: 0 !important;
+}
+
+html.hub-cursor-active,
+html.hub-cursor-active * {
+  cursor: none !important;
+}
+
+html.hub-cursor-active input,
+html.hub-cursor-active textarea,
+html.hub-cursor-active select,
+html.hub-cursor-active [contenteditable="true"] {
+  cursor: text !important;
+}
+
+@media (pointer: coarse) {
+  html.hub-cursor-active,
+  html.hub-cursor-active * {
+    cursor: auto !important;
+  }
+}

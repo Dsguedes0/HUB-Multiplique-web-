@@ -7,6 +7,7 @@ import { Reveal } from "@/components/Reveal";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { ScrollProgress } from "@/components/ScrollProgress";
 import { HeroLogoMark3D } from "@/components/HeroLogoMark3D";
+import { CustomCursor } from "@/components/CustomCursor";
 
 // Sem isso o Next pode cachear "/" como estático, servindo contadores desatualizados.
 export const dynamic = "force-dynamic";
@@ -88,6 +89,7 @@ const PASSOS_EMPRESA = [
 function LandingPage({ vagasCount, empresasCount }: { vagasCount: number; empresasCount: number }) {
   return (
     <div className="min-h-screen bg-hub-paper">
+      <CustomCursor />
       <ScrollProgress />
 
       {/* Header */}
