@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { Spark } from "./Logo";
 
-const MAX_TILT = 14; // degrees, either axis
+const MAX_TILT = 8; // degrees, either axis — kept low so the bars never overlap into an "X"
 const EASE = 0.06; // pointer-follow smoothing — lower = lazier, more "premium" feel
 
 /**
@@ -54,7 +54,7 @@ export function HeroLogoMark3D() {
     <div
       ref={wrapperRef}
       aria-hidden="true"
-      className="hub-float pointer-events-none absolute right-[4%] top-[10%] hidden h-[clamp(150px,15vw,220px)] w-[clamp(150px,15vw,220px)] lg:block"
+      className="hub-float pointer-events-none absolute right-[9%] top-[20%] hidden h-[clamp(140px,13vw,200px)] w-[clamp(140px,13vw,200px)] lg:block"
       style={{ perspective: "700px" }}
     >
       <div
