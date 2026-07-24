@@ -15,7 +15,7 @@ const archivoBlack = Archivo_Black({
 });
 
 export const metadata: Metadata = {
-  title: "Hub Multiplique — Vagas",
+  title: "Hub Multiplique",
   description: "Vagas das empresas parceiras do Hub Multiplique, para a comunidade Poiema.",
 };
 
