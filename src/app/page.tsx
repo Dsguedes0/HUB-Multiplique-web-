@@ -166,7 +166,7 @@ function LandingPage({ vagasCount, empresasCount }: { vagasCount: number; empres
         <Reveal className="mb-10 text-center md:mb-14">
           <div className="mx-auto mb-4 flex max-w-[260px] items-baseline justify-center gap-2 border-b border-hub-line pb-3">
             <span className="hub-section-tag">01</span>
-            <span className="text-[13px] font-extrabold uppercase tracking-wider text-hub-muted-2">Como funciona</span>
+            <span className="text-[13px] font-extrabold uppercase tracking-wider text-hub-muted-2">É um candidato?</span>
           </div>
           <h2 className="text-[28px] font-extrabold tracking-tight">Do currículo à entrevista, com clareza</h2>
         </Reveal>
@@ -191,7 +191,7 @@ function LandingPage({ vagasCount, empresasCount }: { vagasCount: number; empres
         <Reveal className="mb-10 text-center md:mb-14">
           <div className="mx-auto mb-4 flex max-w-[260px] items-baseline justify-center gap-2 border-b border-hub-line pb-3">
             <span className="hub-section-tag">01</span>
-            <span className="text-[13px] font-extrabold uppercase tracking-wider text-hub-muted-2">Como funciona</span>
+            <span className="text-[13px] font-extrabold uppercase tracking-wider text-hub-muted-2">É um empreendedor?</span>
           </div>
           <h2 className="text-[28px] font-extrabold tracking-tight">Da vaga aberta à contratação certa, com dados</h2>
         </Reveal>
