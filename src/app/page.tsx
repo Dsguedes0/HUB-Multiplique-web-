@@ -6,6 +6,7 @@ import { roleHome } from "@/lib/roles";
 import { Reveal } from "@/components/Reveal";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { ScrollProgress } from "@/components/ScrollProgress";
+import { HeroLogoMark3D } from "@/components/HeroLogoMark3D";
 
 // Sem isso o Next pode cachear "/" como estático, servindo contadores desatualizados.
 export const dynamic = "force-dynamic";
@@ -110,6 +111,7 @@ function LandingPage({ vagasCount, empresasCount }: { vagasCount: number; empres
           className="pointer-events-none absolute -right-40 -top-40 h-[480px] w-[480px] rounded-full"
           style={{ background: "radial-gradient(circle, rgba(232,67,46,.18), transparent 70%)" }}
         />
+        <HeroLogoMark3D />
         <div className="anim-in relative z-10 mx-auto max-w-[720px] text-center">
           <h1 className="mb-5 text-[clamp(30px,4.6vw,48px)] font-extrabold leading-[1.12] tracking-tight">
             O portal para o empreendedor que faz parte da <span className="text-hub-red-light">nossa comunidade</span>.

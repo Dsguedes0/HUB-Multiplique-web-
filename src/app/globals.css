@@ -83,6 +83,26 @@ select {
   animation: hub-soft-pulse 2.4s ease-in-out infinite;
 }
 
+@keyframes hub-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.hub-float {
+  animation: hub-float 5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hub-float {
+    animation: none;
+  }
+}
+
 /* Subtle dot-grid backdrop used behind hero copy — brand red only, very low opacity. */
 .hub-dot-grid {
   background-image: radial-gradient(rgba(232, 67, 46, 0.5) 1px, transparent 1px);
